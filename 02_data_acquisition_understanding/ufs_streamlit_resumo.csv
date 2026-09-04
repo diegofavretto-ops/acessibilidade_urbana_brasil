@@ -1,0 +1,28 @@
+﻿Estado,Regiao,Domicilios_base,Iluminacao_publica_pct,Ponto_onibus_van_pct,Via_bicicleta_pct,Calcada_passeio_pct,Calcadas_sem_obstaculos_pct,Rampas_pct,Arborizacao_com_arvores_pct
+Rondônia,Norte,433853,97.3,3.5,1.0,69.5,17.8,18.9,78.9
+Acre,Norte,199449,92.8,8.1,3.1,73.1,8.1,14.7,42.4
+Amazonas,Norte,910645,93.9,5.0,0.6,75.9,10.6,8.3,45.3
+Roraima,Norte,140433,96.6,5.0,1.3,61.8,31.8,25.4,51.3
+Pará,Norte,1820955,95.9,3.4,2.2,66.3,13.9,11.0,52.1
+Amapá,Norte,178903,89.2,2.6,3.3,59.3,19.9,26.9,60.8
+Tocantins,Norte,422735,98.0,1.6,0.7,85.5,14.0,15.8,79.1
+Maranhão,Nordeste,1496389,98.3,3.4,0.6,78.2,6.4,8.8,52.2
+Piauí,Nordeste,736296,98.0,4.4,1.5,83.6,6.2,10.4,66.8
+Ceará,Nordeste,2304260,98.3,6.0,3.3,85.4,13.2,8.8,68.9
+Rio Grande do Norte,Nordeste,922961,98.5,4.1,0.9,87.1,13.0,16.8,66.1
+Paraíba,Nordeste,1095213,98.2,5.2,1.6,85.9,12.1,11.1,64.7
+Pernambuco,Nordeste,2676940,97.4,5.5,1.9,71.7,12.4,9.0,49.1
+Alagoas,Nordeste,826039,98.5,4.3,1.0,85.9,14.4,14.6,45.8
+Sergipe,Nordeste,616835,98.3,5.9,2.4,90.4,13.9,20.2,38.7
+Bahia,Nordeste,3799790,97.5,4.0,1.4,74.4,18.0,12.1,48.4
+Minas Gerais,Sudeste,6628872,98.4,12.0,1.0,90.8,17.9,16.6,64.5
+Espírito Santo,Sudeste,1232659,98.0,10.9,2.5,79.8,22.1,22.1,56.1
+Rio de Janeiro,Sudeste,5987263,96.7,11.9,2.8,80.2,25.6,16.2,62.7
+São Paulo,Sudeste,15502411,97.6,12.2,2.4,92.1,29.5,17.3,74.9
+Paraná,Sul,3729182,98.4,10.4,2.1,88.8,31.7,43.4,83.1
+Santa Catarina,Sul,2441293,98.2,12.3,5.6,79.2,34.8,26.7,41.3
+Rio Grande do Sul,Sul,3708102,97.3,15.2,1.7,83.2,37.1,26.7,77.1
+Mato Grosso do Sul,Centro-Oeste,864307,98.9,6.4,1.1,85.0,28.5,49.3,92.5
+Mato Grosso,Centro-Oeste,1092596,98.2,3.2,1.4,83.2,33.4,27.4,80.9
+Goiás,Centro-Oeste,2384064,99.0,3.8,1.0,93.0,23.6,19.1,82.2
+Distrito Federal,Centro-Oeste,951851,93.7,8.2,4.4,93.5,25.0,36.2,84.9

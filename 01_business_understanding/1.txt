@@ -1,0 +1,29 @@
+META 1
+Disponibilizar dados das 27 Unidades da Federação,
+correspondendo a 100% das UFs presentes na base utilizada.
+
+META 2
+Disponibilizar os quatro indicadores principais do projeto
+— calçada/passeio, calçadas sem obstáculos, rampas e
+arborização — buscando 100% de completude dos registros.
+
+META 3
+Apresentar 100% dos quatro indicadores principais em
+formato percentual para permitir a comparação entre as UFs.
+
+Indicadores de sucesso
+
+- Cobertura territorial: 27 de 27 UFs (100%).
+- Completude dos quatro indicadores principais: 100%.
+- Indicadores principais apresentados em percentual: 4 de 4 (100%).
+
+Funcionalidades da aplicação
+
+- Exibir os dados em uma aplicação Streamlit.
+- Permitir a seleção de regiões.
+- Permitir a seleção de estados.
+- Permitir a seleção de indicadores.
+- Apresentar tabelas com os dados.
+- Exibir conteúdo obtido por Web Scraping.
+- Permitir upload de arquivos CSV.
+- Permitir download dos dados filtrados.
