@@ -93,3 +93,15 @@ a visualização e comparação entre as Unidades da Federação.
 Foi utilizada a ferramenta ChatGPT como apoio no desenvolvimento
 da aplicação Streamlit, conforme permitido para a etapa de programação
 do projeto.
+
+Para instalar as dependências:
+
+pip install -r requirements.txt
+
+Para executar o Web Scraping:
+
+python 02_data_acquisition_understanding/scraping_mobilize.py
+
+Para executar a aplicação:
+
+streamlit run app.py
