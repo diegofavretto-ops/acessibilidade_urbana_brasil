@@ -1,3 +1,4 @@
+import csv
 import os
 
 import pandas as pd
@@ -6,7 +7,7 @@ from bs4 import BeautifulSoup
 
 
 # =========================================================
-# 1. ENDEREÇO DA PÁGINA
+# 1. FONTE
 # =========================================================
 
 url = (
@@ -25,21 +26,12 @@ resposta = requests.get(
     headers={
         "User-Agent": "Mozilla/5.0"
     },
-    timeout=30
+    timeout=30,
 )
 
+print("Status da página:", resposta.status_code)
 
-print(
-    "Status da página:",
-    resposta.status_code
-)
-
-
-# Interrompe o programa caso a página retorne erro
 resposta.raise_for_status()
-
-
-# Ajuda na leitura correta de acentos
 resposta.encoding = resposta.apparent_encoding
 
 
@@ -49,99 +41,63 @@ resposta.encoding = resposta.apparent_encoding
 
 soup = BeautifulSoup(
     resposta.text,
-    "html.parser"
+    "html.parser",
 )
 
 
-# Procura todas as tabelas existentes na página
-tabelas = soup.find_all(
-    "table"
-)
-
-
+tabelas = soup.find_all("table")
 tabela_dados = None
 
-
-# =========================================================
-# 4. LOCALIZA A TABELA CORRETA
-# =========================================================
-
 for tabela in tabelas:
-
     texto_tabela = tabela.get_text(
         " ",
-        strip=True
+        strip=True,
     )
 
     if (
         "Endereço" in texto_tabela
-        and
-        "Rampas" in texto_tabela
-        and
-        "Arborização" in texto_tabela
+        and "Rampas" in texto_tabela
+        and "Arborização" in texto_tabela
     ):
-
         tabela_dados = tabela
-
         break
 
 
 if tabela_dados is None:
-
     raise ValueError(
         "A tabela esperada não foi encontrada na página."
     )
 
 
 # =========================================================
-# 5. EXTRAÇÃO DAS LINHAS DA TABELA
+# 4. EXTRAÇÃO DAS LINHAS
 # =========================================================
 
 dados = []
 
-
-for linha in tabela_dados.find_all(
-    "tr"
-):
-
-    celulas = linha.find_all(
-        "td"
-    )
-
+for linha in tabela_dados.find_all("tr"):
+    celulas = linha.find_all("td")
 
     valores = []
 
-
     for celula in celulas:
-
         texto = celula.get_text(
             " ",
-            strip=True
+            strip=True,
         )
+        valores.append(texto)
 
-        valores.append(
-            texto
-        )
-
-
-    # A tabela possui uma primeira coluna
-    # que não será utilizada no projeto
+    # A tabela possui uma primeira coluna que não será usada.
     if len(valores) == 12:
-
         valores = valores[1:]
 
+    if (
+        len(valores) == 11
+        and valores[0].strip()
+        and valores[-1].strip()
+    ):
+        dados.append(valores)
 
-    # Somente adiciona linhas com os 11 campos esperados
-    if len(valores) == 11:
-
-        dados.append(
-            valores
-        )
-
-
-# =========================================================
-# 6. CRIAÇÃO DO DATAFRAME
-# =========================================================
 
 colunas = [
     "Endereco",
@@ -154,136 +110,46 @@ colunas = [
     "Iluminacao",
     "Arborizacao",
     "Sinalizacao",
-    "Media"
+    "Media",
 ]
 
 
 df_mobilize = pd.DataFrame(
     dados,
-    columns=colunas
+    columns=colunas,
 )
 
 
 # =========================================================
-# 7. FUNÇÃO PARA SEPARAR A CIDADE
+# 5. SEPARAÇÃO DE CIDADE/LOCALIDADE
 # =========================================================
 
 def separar_cidade(texto):
+    texto = str(texto).strip()
 
-    texto = str(
-        texto
-    ).strip()
+    posicao_virgula = texto.rfind(",")
+    posicao_traco = texto.rfind(" - ")
 
-
-    # Procura a última vírgula
-    posicao_virgula = texto.rfind(
-        ","
-    )
-
-
-    # Procura o último traço
-    posicao_traco = texto.rfind(
-        " - "
-    )
-
-
-    # -----------------------------------------------------
-    # CASO 1
-    # A última vírgula está mais à direita que o traço
-    #
-    # Exemplo:
-    #
-    # R. Quinze de Novembro - Sé,São Paulo
-    #
-    # Endereço:
-    # R. Quinze de Novembro - Sé
-    #
-    # Cidade:
-    # São Paulo
-    # -----------------------------------------------------
-
-    if (
-        posicao_virgula
-        >
-        posicao_traco
-    ):
-
-        endereco = texto[
-            :posicao_virgula
-        ].strip()
-
-
-        cidade = texto[
-            posicao_virgula + 1:
-        ].strip()
-
-
-    # -----------------------------------------------------
-    # CASO 2
-    # O último traço aparece mais à direita
-    #
-    # Exemplo:
-    #
-    # Av. Bezerra de Menezes - Fortaleza
-    #
-    # Endereço:
-    # Av. Bezerra de Menezes
-    #
-    # Cidade:
-    # Fortaleza
-    # -----------------------------------------------------
+    if posicao_virgula > posicao_traco:
+        endereco = texto[:posicao_virgula].strip()
+        cidade = texto[posicao_virgula + 1:].strip()
 
     elif posicao_traco != -1:
-
-        endereco = texto[
-            :posicao_traco
-        ].strip()
-
-
-        cidade = texto[
-            posicao_traco + 3:
-        ].strip()
-
-
-    # -----------------------------------------------------
-    # CASO 3
-    # Não encontrou vírgula nem traço
-    # -----------------------------------------------------
+        endereco = texto[:posicao_traco].strip()
+        cidade = texto[posicao_traco + 3:].strip()
 
     else:
-
         endereco = texto
-
         cidade = ""
 
+    return pd.Series([endereco, cidade])
 
-    return pd.Series(
-        [
-            endereco,
-            cidade
-        ]
+
+if not df_mobilize.empty:
+    df_mobilize[["Endereco", "Cidade"]] = (
+        df_mobilize["Endereco"].apply(separar_cidade)
     )
 
-
-# =========================================================
-# 8. APLICA A SEPARAÇÃO
-# =========================================================
-
-df_mobilize[
-    [
-        "Endereco",
-        "Cidade"
-    ]
-] = df_mobilize[
-    "Endereco"
-].apply(
-    separar_cidade
-)
-
-
-# =========================================================
-# 9. ORGANIZA A ORDEM DAS COLUNAS
-# =========================================================
 
 df_mobilize = df_mobilize[
     [
@@ -298,13 +164,13 @@ df_mobilize = df_mobilize[
         "Iluminacao",
         "Arborizacao",
         "Sinalizacao",
-        "Media"
+        "Media",
     ]
 ]
 
 
 # =========================================================
-# 10. CONVERSÃO DOS VALORES PARA NÚMEROS
+# 6. CONVERSÃO PARA NÚMEROS
 # =========================================================
 
 colunas_numericas = [
@@ -317,158 +183,91 @@ colunas_numericas = [
     "Iluminacao",
     "Arborizacao",
     "Sinalizacao",
-    "Media"
+    "Media",
 ]
 
-
 for coluna in colunas_numericas:
-
-    # Troca vírgula decimal por ponto
     df_mobilize[coluna] = (
         df_mobilize[coluna]
         .astype(str)
-        .str.replace(
-            ",",
-            ".",
-            regex=False
-        )
+        .str.replace(",", ".", regex=False)
     )
 
-
-    # Transforma texto em número
     df_mobilize[coluna] = pd.to_numeric(
         df_mobilize[coluna],
-        errors="coerce"
+        errors="coerce",
     )
 
 
 # =========================================================
-# 11. CRIA A PASTA DATA
+# 6.1 VALIDAÇÃO DOS REGISTROS
 # =========================================================
 
-os.makedirs(
-    "data",
-    exist_ok=True
+# Remove eventuais linhas de rodapé da tabela que não representam
+# uma calçada avaliada. Um registro válido precisa ter endereço e
+# uma média numérica.
+df_mobilize = df_mobilize[
+    df_mobilize["Endereco"].fillna("").str.strip().ne("")
+    & df_mobilize["Media"].notna()
+].copy()
+
+df_mobilize = df_mobilize.reset_index(drop=True)
+
+# A própria fonte informa que o levantamento contém 228 locais.
+if len(df_mobilize) != 228:
+    raise ValueError(
+        f"Quantidade inesperada de registros: {len(df_mobilize)}. "
+        "Era esperado encontrar 228 locais."
+    )
+
+
+# =========================================================
+# 7. SALVAMENTO
+# =========================================================
+
+os.makedirs("data", exist_ok=True)
+
+# QUOTE_ALL evita os problemas de leitura que apareceram no TP2
+# quando endereços continham vírgulas.
+df_mobilize.to_csv(
+    "data/calcadas_mobilize.csv",
+    index=False,
+    encoding="utf-8-sig",
+    quoting=csv.QUOTE_ALL,
 )
 
-
-# =========================================================
-# 12. SALVA O CSV
-# =========================================================
-
-try:
-
-    df_mobilize.to_csv(
-        "data/calcadas_mobilize.csv",
-        index=False,
-        encoding="utf-8-sig"
-    )
-
-
-except PermissionError:
-
-    print()
-    print(
-        "ERRO: não foi possível salvar "
-        "data/calcadas_mobilize.csv"
-    )
-
-    print(
-        "Feche o arquivo CSV no Excel "
-        "e execute o programa novamente."
-    )
-
-    raise
-
-
-# =========================================================
-# 13. SALVA O TXT
-# =========================================================
 
 with open(
     "data/calcadas_mobilize.txt",
     "w",
-    encoding="utf-8"
+    encoding="utf-8",
 ) as arquivo:
-
     arquivo.write(
-        df_mobilize.to_string(
-            index=False
-        )
+        df_mobilize.to_string(index=False)
     )
 
 
-# =========================================================
-# 14. RESULTADO DO SCRAPING
-# =========================================================
-
-print()
-
-print(
-    "Quantidade de registros:",
-    len(df_mobilize)
+# Texto usado no gráfico de frequência de termos.
+# São utilizados somente campos textuais coletados da tabela.
+texto_termos = (
+    df_mobilize["Endereco"].fillna("").astype(str)
+    + " "
+    + df_mobilize["Cidade"].fillna("").astype(str)
 )
 
-
-print()
-
-print(
-    "Arquivos criados:"
-)
-
-
-print(
-    "data/calcadas_mobilize.csv"
-)
-
-
-print(
-    "data/calcadas_mobilize.txt"
-)
-
-
-# =========================================================
-# 15. VERIFICAÇÃO DAS CIDADES
-# =========================================================
-
-print()
-
-print(
-    "Cidades encontradas:"
-)
-
-
-print(
-    df_mobilize[
-        "Cidade"
-    ]
-    .value_counts(
-        dropna=False
+with open(
+    "data/texto_mobilize.txt",
+    "w",
+    encoding="utf-8",
+) as arquivo:
+    arquivo.write(
+        "\n".join(texto_termos.tolist())
     )
-    .sort_index()
-)
 
-
-# =========================================================
-# 16. MOSTRA AS PRIMEIRAS LINHAS
-# =========================================================
 
 print()
-
-print(
-    "Primeiras linhas da base:"
-)
-
-
-print(
-    df_mobilize[
-        [
-            "Endereco",
-            "Cidade"
-        ]
-    ]
-    .head(20)
-    .to_string(
-        index=False
-    )
-)
+print("Quantidade de registros:", len(df_mobilize))
+print("Arquivos criados:")
+print("data/calcadas_mobilize.csv")
+print("data/calcadas_mobilize.txt")
+print("data/texto_mobilize.txt")

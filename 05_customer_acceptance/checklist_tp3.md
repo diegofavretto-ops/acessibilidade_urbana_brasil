@@ -1,0 +1,25 @@
+# Checklist de testes - TP3
+
+- [ ] `streamlit run app.py` abre sem erros.
+- [ ] O menu apresenta todas as páginas.
+- [ ] Ranking nacional funciona para diferentes indicadores.
+- [ ] Perfil de uma UF funciona.
+- [ ] Comparação UF x região x média das UFs funciona.
+- [ ] Comparação entre duas UFs funciona.
+- [ ] Comparação entre regiões funciona.
+- [ ] Mobilize mostra notas de 0 a 10.
+- [ ] Top 5 e Bottom 5 do Mobilize funcionam.
+- [ ] Gráfico de frequência de termos é exibido.
+- [ ] Upload de CSV com coluna Estado funciona.
+- [ ] Download da base funciona.
+- [ ] `uvicorn api:app --reload` inicia a API.
+- [ ] `http://127.0.0.1:8000/docs` abre a documentação.
+- [ ] `GET /ufs` funciona.
+- [ ] `GET /ufs/{estado}` funciona.
+- [ ] `POST /observacoes` funciona.
+- [ ] Página API e LLM consegue consultar a API.
+- [ ] Project Charter está atualizado para TP3.
+- [ ] Data Summary Report está atualizado para TP3.
+- [ ] README não menciona o projeto como TP1.
+- [ ] Repositório mantém uma única versão atual do projeto.
+- [ ] `git status` termina com `working tree clean` antes da entrega.

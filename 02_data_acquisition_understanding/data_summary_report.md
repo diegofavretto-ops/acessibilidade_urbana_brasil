@@ -1,42 +1,45 @@
 # Data Summary Report
 
-## Fonte
+## 1. Fonte quantitativa principal
 
-IBGE - Censo Demográfico 2022
-Características Urbanísticas do Entorno dos Domicílios.
+IBGE - Censo Demográfico 2022 - Características Urbanísticas do Entorno dos
+Domicílios - Tabela SIDRA 9584.
 
-## Dados utilizados
+## 2. Dados do IBGE utilizados
 
 | Campo | Tipo | Objetivo |
 |---|---|---|
 | Estado | String | Identificar a Unidade da Federação |
-| Região | String | Identificar a região brasileira |
-| Domicílios base | Integer | Informar a quantidade de domicílios utilizada como referência |
-| Iluminação pública (%) | Float | Analisar presença de iluminação no entorno |
-| Ponto de ônibus/van (%) | Float | Analisar infraestrutura de transporte |
-| Via para bicicleta (%) | Float | Analisar infraestrutura cicloviária |
-| Calçada/passeio (%) | Float | Analisar presença de calçadas |
-| Calçadas sem obstáculos (%) | Float | Analisar condições de circulação |
-| Rampas (%) | Float | Analisar presença de rampas |
-| Arborização (%) | Float | Analisar presença de arborização no entorno |
+| Regiao | String | Identificar a região brasileira |
+| Domicilios_base | Integer | Quantidade de domicílios utilizada como referência |
+| Iluminacao_publica_pct | Float | Presença de iluminação no entorno |
+| Ponto_onibus_van_pct | Float | Infraestrutura de transporte |
+| Via_bicicleta_pct | Float | Infraestrutura cicloviária |
+| Calcada_passeio_pct | Float | Presença de calçada/passeio |
+| Calcadas_sem_obstaculos_pct | Float | Condições de circulação |
+| Rampas_pct | Float | Presença de rampas |
+| Arborizacao_com_arvores_pct | Float | Arborização do entorno |
 
-## Fonte complementar obtida por Web Scraping
+Os percentuais se referem às características observadas no entorno dos domicílios
+considerados no levantamento e não devem ser interpretados diretamente como
+percentual de todas as ruas de cada UF.
 
-Como fonte complementar será utilizada a página
-"Calçadas do Brasil: notas em 228 locais", publicada pelo Mobilize Brasil.
+## 3. Fonte complementar por Web Scraping
 
-A página apresenta avaliações realizadas em diferentes locais do Brasil
-e utiliza critérios relacionados à qualidade das calçadas.
+Como fonte complementar é utilizada a página "Calçadas do Brasil: notas em 228
+locais", publicada pelo Mobilize Brasil.
 
-Os dados serão coletados utilizando Requests e BeautifulSoup e serão
-armazenados em arquivos CSV e TXT dentro da pasta data/.
+A coleta é realizada em um script separado utilizando Requests e BeautifulSoup.
+A tabela coletada é armazenada em `data/calcadas_mobilize.csv` e
+`data/calcadas_mobilize.txt`.
 
 ### Campos coletados
 
 | Campo | Tipo | Objetivo |
 |---|---|---|
 | Endereco | String | Identificar o local avaliado |
-| Irregularidades | Float | Nota relacionada às irregularidades |
+| Cidade | String | Cidade/localidade extraída do texto da fonte |
+| Irregularidades | Float | Nota relacionada às irregularidades do piso |
 | Degraus | Float | Nota relacionada à presença de degraus |
 | Inclinacao | Float | Nota relacionada à inclinação |
 | Largura | Float | Nota relacionada à largura |
@@ -47,29 +50,60 @@ armazenados em arquivos CSV e TXT dentro da pasta data/.
 | Sinalizacao | Float | Nota relacionada à sinalização |
 | Media | Float | Média da avaliação do local |
 
-## Relação com os dados do IBGE
+As notas do Mobilize variam de 0 a 10 e não são percentuais.
 
-Alguns critérios utilizados pelo Mobilize possuem relação temática
-com indicadores existentes na base do IBGE, principalmente:
+## 4. Visualização de frequência de termos
 
-- rampas;
-- obstáculos;
-- iluminação;
-- arborização.
+Para corrigir a ausência apontada na avaliação do TP2, o processo de scraping
+também gera `data/texto_mobilize.txt`, construído com os campos textuais de
+endereço e cidade/localidade coletados na tabela.
 
-Entretanto, as duas bases possuem metodologias, períodos, unidades de
-análise e escalas diferentes.
+A aplicação utiliza esse conteúdo para contar termos com `Counter`, filtrar
+palavras pouco informativas e apresentar um gráfico de frequência com
+`st.bar_chart`.
 
-Por esse motivo, os valores do Mobilize serão utilizados apenas como
-referência complementar e não serão comparados numericamente de forma
-direta com os percentuais do IBGE.
+## 5. Relação entre IBGE e Mobilize
 
-## Dados complementares enviados pelo usuário
+Alguns critérios possuem relação temática, principalmente rampas, obstáculos,
+iluminação e arborização. Entretanto, as bases possuem metodologias, períodos,
+unidades de análise e escalas diferentes.
 
-A aplicação também permitirá o upload de arquivos CSV.
+Por isso, as notas do Mobilize são apresentadas somente como referência
+complementar e não são comparadas numericamente de forma direta com os
+percentuais do IBGE.
 
-Para permitir a integração com a base principal, o arquivo deverá
-possuir uma coluna chamada Estado.
+## 6. Decisão sobre Selenium
 
-As demais colunas poderão conter informações complementares relacionadas
-às Unidades da Federação.
+Selenium foi avaliado, mas não foi necessário para a fonte atual. Os dados
+necessários estão disponíveis diretamente no HTML e podem ser coletados com
+Requests e BeautifulSoup.
+
+Essa decisão mantém o projeto simples e evita executar no aplicativo uma coleta
+mais custosa sem necessidade.
+
+## 7. API FastAPI
+
+A API não cria uma nova fonte de dados. Ela disponibiliza os dados existentes em
+formato apropriado para consumo por programas.
+
+Rotas principais:
+
+- `GET /ufs`: lista as 27 UFs;
+- `GET /ufs/{estado}`: consulta uma UF específica;
+- `POST /observacoes`: registra uma observação complementar;
+- `GET /observacoes`: lista observações registradas.
+
+As observações são armazenadas localmente em `data/observacoes_api.csv`, arquivo
+gerado em tempo de execução.
+
+## 8. Dados complementares enviados pelo usuário
+
+O Streamlit permite upload de CSV. O arquivo precisa possuir a coluna `Estado`.
+As demais colunas são incorporadas à base por meio de `merge`, mantendo todas as
+UFs da base principal.
+
+## 9. Preparação para LLM
+
+Os dados estruturados do IBGE, as avaliações do Mobilize e as observações da API
+podem futuramente ser fornecidos a um LLM para perguntas e respostas e geração
+de relatórios textuais baseados nos dados disponíveis.

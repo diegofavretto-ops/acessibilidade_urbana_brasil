@@ -4,26 +4,50 @@ correspondendo a 100% das UFs presentes na base utilizada.
 
 META 2
 Disponibilizar os quatro indicadores principais do projeto
-— calçada/passeio, calçadas sem obstáculos, rampas e
-arborização — buscando 100% de completude dos registros.
+- calçada/passeio, calçadas sem obstáculos, rampas e
+arborização - buscando 100% de completude dos registros.
 
 META 3
 Apresentar 100% dos quatro indicadores principais em
 formato percentual para permitir a comparação entre as UFs.
+
+META 4
+Organizar a aplicação em múltiplas páginas, disponibilizando
+100% das principais funcionalidades por meio de um menu de navegação.
+
+META 5
+Disponibilizar uma API em FastAPI com pelo menos duas rotas funcionais,
+incluindo consulta de dados e envio de novos dados.
+
+META 6
+Apresentar pelo menos uma visualização de frequência de termos
+obtidos a partir do conteúdo textual coletado por Web Scraping.
+
+META 7
+Manter uma única versão atual do projeto organizada na raiz
+do repositório GitHub.
 
 Indicadores de sucesso
 
 - Cobertura territorial: 27 de 27 UFs (100%).
 - Completude dos quatro indicadores principais: 100%.
 - Indicadores principais apresentados em percentual: 4 de 4 (100%).
+- Aplicação organizada em múltiplas páginas com menu de navegação.
+- API FastAPI com rotas GET e POST funcionais.
+- Pelo menos um gráfico de frequência de termos.
+- Project Charter, Data Summary Report e README atualizados para o TP3.
+- Repositório sem cópias antigas do TP1/TP2 na raiz.
 
 Funcionalidades da aplicação
 
-- Exibir os dados em uma aplicação Streamlit.
-- Permitir a seleção de regiões.
-- Permitir a seleção de estados.
-- Permitir a seleção de indicadores.
-- Apresentar tabelas com os dados.
+- Exibir dados do IBGE em aplicação Streamlit multipágina.
+- Permitir seleção de regiões, estados e indicadores.
+- Apresentar rankings, tabelas e gráficos.
+- Comparar UFs e regiões.
 - Exibir conteúdo obtido por Web Scraping.
+- Apresentar estatísticas e frequência de termos do conteúdo raspado.
 - Permitir upload de arquivos CSV.
-- Permitir download dos dados filtrados.
+- Permitir download dos dados apresentados.
+- Consultar dados por meio de API FastAPI.
+- Enviar observações por meio de rota POST.
+- Preparar a arquitetura para futura integração com LLMs.
