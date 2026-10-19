@@ -137,7 +137,7 @@ O script gera:
 ## Executar o Streamlit
 
 ```powershell
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 Acesse:
@@ -149,7 +149,7 @@ Acesse:
 Abra **outro terminal**, ative o mesmo ambiente virtual e execute:
 
 ```powershell
-uvicorn api:app --reload
+python -m uvicorn api:app --reload
 ```
 
 API:
