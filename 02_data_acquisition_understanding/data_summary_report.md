@@ -2,43 +2,68 @@
 
 ## 1. Fonte quantitativa principal
 
-IBGE - Censo Demográfico 2022 - Características Urbanísticas do Entorno dos
-Domicílios - Tabela SIDRA 9584.
+A principal fonte quantitativa utilizada no projeto é:
+
+**IBGE - Censo Demográfico 2022 - Características Urbanísticas do Entorno dos Domicílios - Tabela SIDRA 9584.**
+
+Os dados foram organizados por Unidade da Federação para utilização no
+dashboard, na API e na geração de resumos com o modelo de linguagem local.
 
 ## 2. Dados do IBGE utilizados
+
+Os principais campos da base são:
 
 | Campo | Tipo | Objetivo |
 |---|---|---|
 | Estado | String | Identificar a Unidade da Federação |
 | Regiao | String | Identificar a região brasileira |
 | Domicilios_base | Integer | Quantidade de domicílios utilizada como referência |
-| Iluminacao_publica_pct | Float | Presença de iluminação no entorno |
-| Ponto_onibus_van_pct | Float | Infraestrutura de transporte |
-| Via_bicicleta_pct | Float | Infraestrutura cicloviária |
-| Calcada_passeio_pct | Float | Presença de calçada/passeio |
-| Calcadas_sem_obstaculos_pct | Float | Condições de circulação |
+| Iluminacao_publica_pct | Float | Presença de iluminação pública no entorno |
+| Ponto_onibus_van_pct | Float | Presença de ponto de ônibus ou van |
+| Via_bicicleta_pct | Float | Presença de infraestrutura para bicicleta |
+| Calcada_passeio_pct | Float | Presença de calçada ou passeio |
+| Calcadas_sem_obstaculos_pct | Float | Calçadas sem obstáculos |
 | Rampas_pct | Float | Presença de rampas |
-| Arborizacao_com_arvores_pct | Float | Arborização do entorno |
+| Arborizacao_com_arvores_pct | Float | Presença de arborização |
 
-Os percentuais se referem às características observadas no entorno dos domicílios
-considerados no levantamento e não devem ser interpretados diretamente como
-percentual de todas as ruas de cada UF.
+Os percentuais representam características observadas no entorno dos domicílios
+considerados na pesquisa.
 
-## 3. Fonte complementar por Web Scraping
+Por isso, os valores não devem ser interpretados diretamente como percentual de
+todas as ruas existentes em cada Unidade da Federação.
 
-Como fonte complementar é utilizada a página "Calçadas do Brasil: notas em 228
-locais", publicada pelo Mobilize Brasil.
+Também é importante considerar que os indicadores de rampas e calçadas sem
+obstáculos possuem contexto metodológico relacionado aos locais onde existe
+calçada.
 
-A coleta é realizada em um script separado utilizando Requests e BeautifulSoup.
-A tabela coletada é armazenada em `data/calcadas_mobilize.csv` e
-`data/calcadas_mobilize.txt`.
+O projeto não utiliza esses indicadores como uma certificação geral de
+acessibilidade de uma UF.
+
+## 3. Primeira fonte complementar por Web Scraping
+
+Como fonte complementar foi utilizado o levantamento do Mobilize Brasil:
+
+**Calçadas do Brasil: notas em 228 locais.**
+
+A coleta é realizada pelo script:
+
+`02_data_acquisition_understanding/scraping_mobilize.py`
+
+O script utiliza:
+
+- Requests;
+- BeautifulSoup;
+- Pandas.
+
+A página possui avaliações de locais segundo diferentes critérios relacionados
+às condições das calçadas.
 
 ### Campos coletados
 
 | Campo | Tipo | Objetivo |
 |---|---|---|
 | Endereco | String | Identificar o local avaliado |
-| Cidade | String | Cidade/localidade extraída do texto da fonte |
+| Cidade | String | Cidade ou localidade |
 | Irregularidades | Float | Nota relacionada às irregularidades do piso |
 | Degraus | Float | Nota relacionada à presença de degraus |
 | Inclinacao | Float | Nota relacionada à inclinação |
@@ -48,20 +73,36 @@ A tabela coletada é armazenada em `data/calcadas_mobilize.csv` e
 | Iluminacao | Float | Nota relacionada à iluminação |
 | Arborizacao | Float | Nota relacionada à arborização |
 | Sinalizacao | Float | Nota relacionada à sinalização |
-| Media | Float | Média da avaliação do local |
+| Media | Float | Nota média do local |
 
-As notas do Mobilize variam de 0 a 10 e não são percentuais.
+As notas do Mobilize são apresentadas em uma escala de 0 a 10 e não devem ser
+comparadas diretamente com os percentuais do IBGE.
 
-## 3.1 Segunda página coletada por Web Scraping
+Os arquivos gerados são:
 
-Como complemento à tabela de avaliações, também é utilizada a página
-"Panorama das calçadas", do Mobilize Brasil.
+- `data/calcadas_mobilize.csv`;
+- `data/calcadas_mobilize.txt`;
+- `data/texto_mobilize.txt`.
 
-Essa segunda coleta utiliza Requests e BeautifulSoup, mas possui uma estrutura
-diferente da primeira fonte. Em vez de extrair uma tabela, o script analisa
-parágrafos e itens de texto da página.
+## 4. Segunda página coletada por Web Scraping
 
-Os trechos são classificados conforme termos relacionados ao projeto, incluindo:
+Para ampliar a utilização de Web Scraping no projeto foi adicionada uma segunda
+página do Mobilize Brasil:
+
+**Panorama das calçadas.**
+
+A coleta é realizada pelo script:
+
+`02_data_acquisition_understanding/scraping_mobilize_panorama.py`
+
+Essa coleta possui uma estrutura diferente da primeira.
+
+Na primeira página o objetivo é extrair uma tabela com dados numéricos.
+
+Na segunda página o objetivo é analisar parágrafos e itens de texto relacionados
+aos critérios utilizados no estudo das calçadas.
+
+Os textos são classificados segundo categorias como:
 
 - calçadas;
 - degraus;
@@ -74,69 +115,258 @@ Os trechos são classificados conforme termos relacionados ao projeto, incluindo
 - rampas;
 - sinalização.
 
-Na execução realizada durante o TP4 foram coletados 17 trechos relacionados a
-esses temas.
+Durante a coleta válida realizada no desenvolvimento do TP4 foram obtidos 17
+trechos relacionados a esses temas.
 
 Os resultados são armazenados em:
 
 - `data/mobilize_panorama_calcadas.csv`;
 - `data/mobilize_panorama_calcadas.txt`.
 
-Na aplicação Streamlit, esses dados são apresentados com filtro por categoria,
-tabela dos trechos encontrados e gráfico de frequência das categorias.
+Na aplicação Streamlit esses dados podem ser filtrados por categoria e também
+são apresentados em tabela e gráfico de frequência.
 
-## 4. Visualização de frequência de termos
+## 5. Tratamento da indisponibilidade da fonte externa
 
-Para corrigir a ausência apontada na avaliação do TP2, o processo de scraping
-também gera `data/texto_mobilize.txt`, construído com os campos textuais de
-endereço e cidade/localidade coletados na tabela.
+Durante o desenvolvimento foi observado que o site Mobilize pode responder com
+código HTTP 200 e, mesmo assim, apresentar internamente a mensagem:
 
-A aplicação utiliza esse conteúdo para contar termos com `Counter`, filtrar
-palavras pouco informativas e apresentar um gráfico de frequência com
-`st.bar_chart`.
+`Esta página não pode ser exibida no momento`
 
-## 5. Relação entre IBGE e Mobilize
+Nesse caso, o código HTTP sozinho não é suficiente para considerar a coleta
+bem-sucedida.
 
-Alguns critérios possuem relação temática, principalmente rampas, obstáculos,
-iluminação e arborização. Entretanto, as bases possuem metodologias, períodos,
-unidades de análise e escalas diferentes.
+Os dois scripts de Web Scraping foram adaptados para verificar também o conteúdo
+recebido.
 
-Por isso, as notas do Mobilize são apresentadas somente como referência
-complementar e não são comparadas numericamente de forma direta com os
-percentuais do IBGE.
+Quando a página está disponível, o processo realiza a coleta normalmente.
 
-## 6. Decisão sobre Selenium
+Quando a página apresenta a mensagem de indisponibilidade, o script:
 
-Selenium foi avaliado, mas não foi necessário para a fonte atual. Os dados
-necessários estão disponíveis diretamente no HTML e podem ser coletados com
-Requests e BeautifulSoup.
+1. identifica a falha da fonte;
+2. não sobrescreve os dados existentes;
+3. verifica se existe um último snapshot válido;
+4. mantém os arquivos anteriormente coletados;
+5. informa a situação no terminal sem gerar um traceback desnecessário.
 
-Essa decisão mantém o projeto simples e evita executar no aplicativo uma coleta
-mais custosa sem necessidade.
+No momento da validação dessa contingência foram preservados:
 
-## 7. API FastAPI
+- 228 registros da tabela de avaliações;
+- 17 trechos da página Panorama das Calçadas.
 
-A API não cria uma nova fonte de dados. Ela disponibiliza os dados existentes em
-formato apropriado para consumo por programas.
+Essa estratégia evita que uma indisponibilidade temporária de uma fonte externa
+destrua dados válidos previamente coletados.
 
-Rotas principais:
+## 6. Visualização de frequência de termos
 
-- `GET /ufs`: lista as 27 UFs;
-- `GET /ufs/{estado}`: consulta uma UF específica;
-- `POST /observacoes`: registra uma observação complementar;
-- `GET /observacoes`: lista observações registradas.
+Para atender ao feedback recebido em etapa anterior do projeto, foi implementada
+uma visualização de frequência de termos.
 
-As observações são armazenadas localmente em `data/observacoes_api.csv`, arquivo
-gerado em tempo de execução.
+O arquivo:
 
-## 8. Dados complementares enviados pelo usuário
+`data/texto_mobilize.txt`
 
-O Streamlit permite upload de CSV. O arquivo precisa possuir a coluna `Estado`.
-As demais colunas são incorporadas à base por meio de `merge`, mantendo todas as
-UFs da base principal.
+é construído utilizando os campos textuais obtidos na primeira raspagem.
 
-## 9. Preparação para LLM
+A aplicação utiliza `Counter`, da biblioteca padrão do Python, para contar os
+termos mais frequentes.
 
-Os dados estruturados do IBGE, as avaliações do Mobilize e as observações da API
-podem futuramente ser fornecidos a um LLM para perguntas e respostas e geração
-de relatórios textuais baseados nos dados disponíveis.
+Palavras pouco informativas são removidas e os termos restantes são apresentados
+em:
+
+- tabela;
+- gráfico de barras.
+
+A segunda fonte também possui uma visualização da frequência das categorias
+identificadas nos 17 trechos coletados.
+
+## 7. Relação entre IBGE e Mobilize
+
+IBGE e Mobilize possuem alguns temas semelhantes, como:
+
+- rampas;
+- obstáculos;
+- iluminação;
+- arborização;
+- condições das calçadas.
+
+Entretanto, as duas fontes possuem:
+
+- metodologias diferentes;
+- períodos diferentes;
+- unidades de análise diferentes;
+- escalas diferentes.
+
+Por isso, os valores não são comparados numericamente de forma direta.
+
+O Mobilize é utilizado como referência complementar ao conjunto de dados
+principal do IBGE.
+
+## 8. Decisão sobre Selenium
+
+Selenium foi avaliado durante o desenvolvimento.
+
+Para as fontes selecionadas, não foi necessário utilizar automação de navegador
+porque os dados de interesse podem ser obtidos do HTML utilizando Requests e
+BeautifulSoup quando as páginas estão disponíveis.
+
+Por isso, o projeto mantém a solução mais simples.
+
+Quando a fonte externa está temporariamente indisponível, o projeto preserva o
+último snapshot válido em vez de utilizar Selenium apenas para tentar contornar
+a indisponibilidade do servidor.
+
+## 9. API FastAPI
+
+A aplicação possui uma API desenvolvida com FastAPI.
+
+A API disponibiliza os dados existentes em um formato que pode ser consumido
+por outros programas.
+
+As principais rotas relacionadas aos dados são:
+
+- `GET /`;
+- `GET /ufs`;
+- `GET /ufs/{estado}`;
+- `POST /observacoes`;
+- `GET /observacoes`.
+
+No TP4 foram acrescentadas:
+
+- `GET /ia/status`;
+- `POST /ia/resumo-uf`.
+
+## 10. Response Models
+
+As respostas das rotas da FastAPI são estruturadas utilizando modelos Pydantic.
+
+Isso permite validar o formato das respostas e definir de forma explícita quais
+campos devem ser devolvidos pela API.
+
+A rota:
+
+`POST /ia/resumo-uf`
+
+utiliza um Response Model contendo:
+
+- estado;
+- região;
+- modelo utilizado;
+- dispositivo de execução;
+- indicadores enviados ao modelo;
+- resumo produzido pelo LLM.
+
+## 11. Integração com modelo de linguagem local
+
+No TP4 foi integrado o modelo:
+
+`Qwen/Qwen2.5-0.5B-Instruct`
+
+O modelo é executado localmente utilizando:
+
+- PyTorch;
+- Hugging Face Transformers;
+- Hugging Face Hub.
+
+No ambiente utilizado durante o desenvolvimento foram verificados:
+
+- Python 3.14;
+- PyTorch 2.15.0+cpu;
+- Transformers 5.23.0;
+- execução em CPU;
+- CUDA não disponível.
+
+Os arquivos do modelo são armazenados localmente em:
+
+`models/qwen2.5-0.5b-instruct`
+
+A pasta `models/` é ignorada pelo Git e os pesos do modelo não são enviados ao
+GitHub.
+
+## 12. Utilização dos dados pelo LLM
+
+O modelo não funciona como um chatbot genérico dentro do projeto.
+
+O usuário seleciona uma Unidade da Federação.
+
+A FastAPI consulta os dados correspondentes e fornece ao modelo os seguintes
+indicadores:
+
+- calçada/passeio;
+- calçadas sem obstáculos;
+- rampas;
+- arborização.
+
+O prompt orienta o modelo a:
+
+- utilizar somente os dados fornecidos;
+- não inventar valores;
+- não utilizar informações externas;
+- não classificar uma UF como acessível ou inacessível;
+- não interpretar os valores como percentual de todas as ruas;
+- não criar um índice geral de acessibilidade;
+- produzir um resumo curto em português do Brasil.
+
+## 13. Tratamento de erros da API
+
+A integração com o modelo possui tratamento de diferentes situações.
+
+### HTTP 404
+
+Utilizado quando a Unidade da Federação solicitada não existe na base.
+
+### HTTP 422
+
+Utilizado quando os dados de entrada não passam pela validação realizada pelo
+Pydantic.
+
+### HTTP 503
+
+Utilizado quando os arquivos do modelo local não estão disponíveis ou quando o
+modelo não pode ser carregado ou executado.
+
+### HTTP 500
+
+Utilizado para uma falha inesperada durante a geração da resposta.
+
+Esses comportamentos foram testados durante o desenvolvimento do TP4.
+
+## 14. Integração com Streamlit
+
+A página:
+
+`pages/api_llm.py`
+
+consome as respostas da FastAPI.
+
+Diferentemente da versão anterior do projeto, os resultados da API não são
+apresentados somente como JSON.
+
+Eles são utilizados para alimentar:
+
+- tabela de indicadores;
+- gráfico de barras;
+- informações sobre o modelo;
+- resumo textual produzido pelo Qwen.
+
+O fluxo principal é:
+
+```text
+Usuário
+    ↓
+Streamlit
+    ↓
+FastAPI
+    ↓
+dados do IBGE
+    ↓
+prompt
+    ↓
+Qwen local
+    ↓
+Response Model
+    ↓
+Streamlit
+    ├── tabela
+    ├── gráfico
+    └── resumo

@@ -1,4 +1,4 @@
-# Acessibilidade Urbana no Brasil
+## Acessibilidade Urbana no Brasil
 
 Projeto desenvolvido na disciplina de **Projeto de Bloco - Inteligência Artificial
 Aplicada**.
@@ -10,55 +10,91 @@ Aplicada**.
 ## Objetivo
 
 Organizar, visualizar e comparar dados relacionados à acessibilidade urbana no
-Brasil, utilizando Streamlit, Pandas, Web Scraping e FastAPI.
+Brasil utilizando Python, Pandas, Streamlit, Web Scraping, FastAPI e um modelo
+de linguagem executado localmente.
 
 O projeto está relacionado ao **ODS 11 - Cidades e Comunidades Sustentáveis**.
 
-## O que foi corrigido após o TP2
+## Evolução do projeto
 
-A avaliação do TP2 apontou dois ajustes principais:
+O projeto foi desenvolvido de forma incremental ao longo dos TPs.
 
-1. faltava uma visualização de frequência de termos;
-2. o repositório possuía arquivos antigos e o README ainda identificava o projeto
-   como TP1.
+No TP3 foram implementados:
 
-No TP3:
+- aplicação Streamlit com múltiplas páginas;
+- visualização de frequência de termos;
+- API com FastAPI;
+- rotas para consulta das UFs;
+- registro de observações;
+- preparação para futura integração com modelos de linguagem.
 
-- foi incluído um **gráfico de frequência de termos** obtidos do conteúdo textual
-  raspado do Mobilize;
-- a aplicação foi reorganizada em **múltiplas páginas**;
-- o README foi atualizado;
-- a estrutura foi preparada para manter **uma única versão** na raiz do repositório;
-- foi adicionada uma **API com FastAPI**;
-- foi criada a preparação documental para futura integração com **LLMs**.
+No TP4 foram acrescentados:
 
-## Fontes
+- uma segunda página coletada por Web Scraping;
+- integração de um LLM executado localmente;
+- Response Models com Pydantic;
+- tratamento de erros HTTP;
+- integração entre Streamlit, FastAPI e o modelo local;
+- geração de resumos textuais a partir dos indicadores reais do IBGE.
+
+## Fontes de dados
 
 ### IBGE
+
+Fonte quantitativa principal:
 
 - Censo Demográfico 2022;
 - Características Urbanísticas do Entorno dos Domicílios;
 - Tabela SIDRA 9584.
 
+Os percentuais representam características observadas no entorno dos domicílios
+considerados na pesquisa e não devem ser interpretados diretamente como
+percentual de todas as ruas de cada UF.
+
 ### Mobilize Brasil
 
 O projeto utiliza duas páginas do Mobilize Brasil como fontes complementares
-obtidas por Web Scraping:
+obtidas por Web Scraping.
 
-- o levantamento "Calçadas do Brasil: notas em 228 locais", utilizado para
-  coletar avaliações numéricas das condições das calçadas;
-- a página "Panorama das calçadas", utilizada para coletar trechos textuais
-  relacionados aos critérios de avaliação.
+A primeira é o levantamento:
 
-As duas coletas utilizam Requests e BeautifulSoup. A primeira realiza a extração
-de uma tabela HTML, enquanto a segunda analisa parágrafos e itens textuais.
+`Calçadas do Brasil: notas em 228 locais`
+
+Essa página fornece avaliações numéricas relacionadas às condições das calçadas.
+
+A segunda é a página:
+
+`Panorama das calçadas`
+
+Essa página é utilizada para coleta de trechos textuais relacionados a temas
+como:
+
+- calçadas;
+- degraus;
+- iluminação;
+- irregularidades;
+- largura;
+- obstáculos;
+- paisagismo;
+- pedestres;
+- rampas;
+- sinalização.
+
+As duas coletas utilizam Requests e BeautifulSoup.
+
+A primeira realiza a extração de uma tabela HTML.
+
+A segunda analisa parágrafos e itens de texto.
 
 ## Selenium
 
-Selenium foi avaliado, porém não é necessário na fonte atual porque a tabela de
-interesse está disponível diretamente no HTML. Por isso o projeto mantém Requests
-e BeautifulSoup, conforme a orientação de simplificar quando não houver necessidade
-de scraping dinâmico.
+Selenium foi avaliado, mas não foi necessário para as fontes utilizadas.
+
+Os dados necessários estão disponíveis diretamente no HTML e podem ser coletados
+com Requests e BeautifulSoup.
+
+Essa decisão mantém a solução mais simples e evita utilizar uma ferramenta de
+automação de navegador quando ela não é necessária.
 
 ## Estrutura
 
@@ -66,8 +102,9 @@ de scraping dinâmico.
 acessibilidade_urbana_brasil/
 │
 ├── app.py
-├── comum.py
 ├── api.py
+├── comum.py
+├── llm_local.py
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
@@ -81,124 +118,22 @@ acessibilidade_urbana_brasil/
 │   └── api_llm.py
 │
 ├── 01_business_understanding/
+│
 ├── 02_data_acquisition_understanding/
+│   ├── data_summary_report.md
+│   ├── scraping_mobilize.py
+│   └── scraping_mobilize_panorama.py
+│
 ├── 03_modeling/
+│   ├── escolha_modelo_tp4.md
+│   ├── integracao_llm_tp4.md
+│   ├── baixar_modelo.py
+│   └── testar_modelo_local.py
+│
 ├── 04_deployment/
 ├── 05_customer_acceptance/
-└── data/
-```
-
-## Tecnologias
-
-- Python;
-- Pandas;
-- Streamlit;
-- Requests;
-- BeautifulSoup;
-- FastAPI;
-- Uvicorn.
-
-## Instalação
-
-### 1. Criar ambiente virtual
-
-No PowerShell, na raiz do projeto:
-
-```powershell
-python -m venv .venv
-```
-
-### 2. Ativar
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Se o PowerShell bloquear a ativação, execute somente para a sessão atual:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
-
-Depois ative novamente.
-
-### 3. Instalar dependências
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-## Atualizar os dados do Web Scraping
-
-### Levantamento das avaliações
-
-Na raiz do projeto:
-
-```powershell
-python 02_data_acquisition_understanding/scraping_mobilize.py
-
-
-O script gera:
-
-- `data/calcadas_mobilize.csv`;
-- `data/calcadas_mobilize.txt`;
-- `data/texto_mobilize.txt`.
-
-## Executar o Streamlit
-
-```powershell
-python -m streamlit run app.py
-```
-
-Acesse:
-
-`http://localhost:8501`
-
-## Executar a FastAPI
-
-Abra **outro terminal**, ative o mesmo ambiente virtual e execute:
-
-```powershell
-python -m uvicorn api:app --reload
-```
-
-API:
-
-`http://127.0.0.1:8000`
-
-Documentação automática:
-
-`http://127.0.0.1:8000/docs`
-
-Para testar a integração, mantenha a API ligada e abra a página **API e LLM** do
-Streamlit.
-
-## Principais rotas da API
-
-| Método | Rota | Função |
-|---|---|---|
-| GET | `/` | Verifica se a API está funcionando |
-| GET | `/ufs` | Retorna todas as UFs |
-| GET | `/ufs/{estado}` | Retorna uma UF específica |
-| POST | `/observacoes` | Registra uma observação |
-| GET | `/observacoes` | Lista observações registradas |
-
-## Preparação para LLM
-
-O TP3 não implementa um LLM. A arquitetura fica preparada para a próxima etapa.
-Foram priorizadas duas aplicações futuras:
-
-- perguntas e respostas baseadas nos dados;
-- geração automática de relatórios e resumos.
-
-## GitHub
-
-Repositório:
-
-https://github.com/diegofavretto-ops/acessibilidade_urbana_brasil
-
-## Entrega TP3
-
-O PDF final deve ser nomeado:
-
-`diego_favretto_PB_TP3.pdf`
+│
+├── data/
+│
+└── models/
+    └── qwen2.5-0.5b-instruct/
