@@ -5,7 +5,7 @@ Aplicada**.
 
 ## Etapa atual
 
-**TP3**
+**TP4**
 
 ## Objetivo
 
@@ -42,8 +42,16 @@ No TP3:
 
 ### Mobilize Brasil
 
-- levantamento "Calçadas do Brasil: notas em 228 locais";
-- coleta com Requests e BeautifulSoup.
+O projeto utiliza duas páginas do Mobilize Brasil como fontes complementares
+obtidas por Web Scraping:
+
+- o levantamento "Calçadas do Brasil: notas em 228 locais", utilizado para
+  coletar avaliações numéricas das condições das calçadas;
+- a página "Panorama das calçadas", utilizada para coletar trechos textuais
+  relacionados aos critérios de avaliação.
+
+As duas coletas utilizam Requests e BeautifulSoup. A primeira realiza a extração
+de uma tabela HTML, enquanto a segunda analisa parágrafos e itens textuais.
 
 ## Selenium
 
@@ -122,11 +130,13 @@ python -m pip install -r requirements.txt
 
 ## Atualizar os dados do Web Scraping
 
-Na raiz:
+### Levantamento das avaliações
+
+Na raiz do projeto:
 
 ```powershell
 python 02_data_acquisition_understanding/scraping_mobilize.py
-```
+
 
 O script gera:
 

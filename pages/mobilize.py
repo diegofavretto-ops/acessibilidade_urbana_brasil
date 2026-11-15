@@ -7,11 +7,13 @@ import streamlit as st
 from comum import (
     carregar_dados_mobilize,
     carregar_texto_mobilize,
+    carregar_mobilize_panorama,
 )
 
 
 df_mobilize = carregar_dados_mobilize()
 texto_mobilize = carregar_texto_mobilize()
+df_panorama = carregar_mobilize_panorama()
 
 
 st.title("Referência externa - Mobilize")
@@ -178,3 +180,104 @@ else:
     st.warning(
         "Não há conteúdo textual suficiente para calcular a frequência."
     )
+st.header("3. Segunda página coletada por Web Scraping")
+
+st.write(
+    "Como complemento ao levantamento com as notas das calçadas, "
+    "foi realizada uma segunda coleta no Mobilize Brasil. "
+    "Nesta página, o objetivo é analisar textos relacionados aos "
+    "critérios utilizados na avaliação das calçadas."
+)
+
+st.caption(
+    "Fonte complementar: Mobilize Brasil - Panorama das Calçadas."
+)
+
+
+# =========================================================
+# FILTRO POR CATEGORIA
+# =========================================================
+
+categorias_panorama = (
+    df_panorama["Categorias"]
+    .str.split("; ")
+    .explode()
+    .dropna()
+    .drop_duplicates()
+    .sort_values()
+    .tolist()
+)
+
+
+categoria_escolhida = st.selectbox(
+    "Filtrar os textos por categoria:",
+    ["Todas"] + categorias_panorama,
+    key="mobilize_panorama_categoria",
+)
+
+
+if categoria_escolhida == "Todas":
+
+    df_filtrado = df_panorama.copy()
+
+else:
+
+    df_filtrado = df_panorama[
+        df_panorama["Categorias"].str.contains(
+            categoria_escolhida,
+            regex=False,
+            na=False,
+        )
+    ]
+
+
+st.metric(
+    "Trechos encontrados",
+    len(df_filtrado),
+)
+
+
+st.dataframe(
+    df_filtrado[
+        [
+            "Categorias",
+            "Texto",
+        ]
+    ],
+    use_container_width=True,
+)
+
+
+# =========================================================
+# FREQUÊNCIA DAS CATEGORIAS
+# =========================================================
+
+st.subheader("Frequência das categorias")
+
+frequencia_categorias = (
+    df_panorama["Categorias"]
+    .str.split("; ")
+    .explode()
+    .value_counts()
+    .rename_axis("Categoria")
+    .reset_index(name="Frequência")
+)
+
+
+st.dataframe(
+    frequencia_categorias,
+    use_container_width=True,
+)
+
+
+st.bar_chart(
+    frequencia_categorias.set_index(
+        "Categoria"
+    )
+)
+
+
+st.caption(
+    "O gráfico mostra quantos trechos coletados mencionam "
+    "cada categoria relacionada às condições das calçadas."
+)

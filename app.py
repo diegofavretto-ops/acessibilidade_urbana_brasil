@@ -35,7 +35,7 @@ paginas = {
         ),
         st.Page(
             "pages/mobilize.py",
-            title="Referência Mobilize",
+            title="Referências Web",
             icon="🚶",
         ),
     ],

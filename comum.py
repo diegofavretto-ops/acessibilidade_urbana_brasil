@@ -24,6 +24,11 @@ CAMINHO_TEXTO_MOBILIZE = (
     / "texto_mobilize.txt"
 )
 
+CAMINHO_MOBILIZE_PANORAMA = (
+    BASE_DIR
+    / "data"
+    / "mobilize_panorama_calcadas.csv"
+)
 
 @st.cache_data
 def carregar_dados_ibge():
@@ -41,6 +46,12 @@ def carregar_texto_mobilize():
         return CAMINHO_TEXTO_MOBILIZE.read_text(
             encoding="utf-8"
         )
+    
+@st.cache_data
+def carregar_mobilize_panorama():
+    return pd.read_csv(
+        CAMINHO_MOBILIZE_PANORAMA
+    )
 
     # Fallback: usa os campos textuais já raspados do CSV.
     df_mobilize = carregar_dados_mobilize()

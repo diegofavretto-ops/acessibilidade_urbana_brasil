@@ -52,6 +52,39 @@ A tabela coletada é armazenada em `data/calcadas_mobilize.csv` e
 
 As notas do Mobilize variam de 0 a 10 e não são percentuais.
 
+## 3.1 Segunda página coletada por Web Scraping
+
+Como complemento à tabela de avaliações, também é utilizada a página
+"Panorama das calçadas", do Mobilize Brasil.
+
+Essa segunda coleta utiliza Requests e BeautifulSoup, mas possui uma estrutura
+diferente da primeira fonte. Em vez de extrair uma tabela, o script analisa
+parágrafos e itens de texto da página.
+
+Os trechos são classificados conforme termos relacionados ao projeto, incluindo:
+
+- calçadas;
+- degraus;
+- iluminação;
+- irregularidades;
+- largura;
+- obstáculos;
+- paisagismo;
+- pedestres;
+- rampas;
+- sinalização.
+
+Na execução realizada durante o TP4 foram coletados 17 trechos relacionados a
+esses temas.
+
+Os resultados são armazenados em:
+
+- `data/mobilize_panorama_calcadas.csv`;
+- `data/mobilize_panorama_calcadas.txt`.
+
+Na aplicação Streamlit, esses dados são apresentados com filtro por categoria,
+tabela dos trechos encontrados e gráfico de frequência das categorias.
+
 ## 4. Visualização de frequência de termos
 
 Para corrigir a ausência apontada na avaliação do TP2, o processo de scraping
