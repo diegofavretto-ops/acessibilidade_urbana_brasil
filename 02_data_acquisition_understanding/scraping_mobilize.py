@@ -7,97 +7,249 @@ from bs4 import BeautifulSoup
 
 
 # =========================================================
-# 1. FONTE
+# 1. FONTES
 # =========================================================
 
-url = (
+URL_NORMAL = (
     "https://www.mobilize.org.br/"
     "estatisticas/31/"
     "calcadas-do-brasil-ficam-com-media-34.html"
 )
 
-
-# =========================================================
-# 2. ACESSO À PÁGINA
-# =========================================================
-
-resposta = requests.get(
-    url,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
-    timeout=30,
+URL_IMPRESSAO = (
+    "https://www.mobilize.org.br/"
+    "estatisticas/31/"
+    "calcadas-do-brasil-ficam-com-media-34.html"
+    "?print=s"
 )
 
-print("Status da página:", resposta.status_code)
-
-resposta.raise_for_status()
-resposta.encoding = resposta.apparent_encoding
+CAMINHO_CSV = "data/calcadas_mobilize.csv"
+CAMINHO_TXT = "data/calcadas_mobilize.txt"
+CAMINHO_TEXTO = "data/texto_mobilize.txt"
 
 
 # =========================================================
-# 3. BEAUTIFULSOUP
+# 2. FUNÇÃO PARA USAR SNAPSHOT ANTERIOR
 # =========================================================
 
-soup = BeautifulSoup(
-    resposta.text,
-    "html.parser",
-)
+def usar_snapshot_anterior(motivo):
+    print()
+    print("Aviso:", motivo)
+
+    if os.path.exists(CAMINHO_CSV):
+
+        df_existente = pd.read_csv(
+            CAMINHO_CSV
+        )
+
+        print()
+        print(
+            "O último arquivo válido já existente "
+            "será mantido."
+        )
+
+        print(
+            "Arquivo:",
+            CAMINHO_CSV,
+        )
+
+        print(
+            "Quantidade de registros preservados:",
+            len(df_existente),
+        )
+
+        print(
+            "Nenhum dado anterior foi sobrescrito."
+        )
+
+        raise SystemExit(0)
+
+    raise RuntimeError(
+        "A fonte está indisponível e não existe "
+        "um snapshot local anterior."
+    )
 
 
-tabelas = soup.find_all("table")
+# =========================================================
+# 3. TENTATIVA DE ACESSO
+# =========================================================
+
 tabela_dados = None
+url_utilizada = None
 
-for tabela in tabelas:
-    texto_tabela = tabela.get_text(
+urls = [
+    URL_NORMAL,
+    URL_IMPRESSAO,
+]
+
+
+for url in urls:
+
+    print()
+    print(
+        "Tentando acessar:",
+        url,
+    )
+
+    try:
+
+        resposta = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+            },
+            timeout=30,
+        )
+
+    except requests.RequestException:
+
+        print(
+            "Não foi possível acessar esta URL."
+        )
+
+        continue
+
+
+    print(
+        "Status da página:",
+        resposta.status_code,
+    )
+
+
+    if resposta.status_code != 200:
+        continue
+
+
+    soup = BeautifulSoup(
+        resposta.content,
+        "html.parser",
+    )
+
+
+    texto_pagina = soup.get_text(
         " ",
         strip=True,
     )
 
+
+    # O Mobilize pode responder HTTP 200,
+    # mas mostrar internamente uma página de erro.
     if (
-        "Endereço" in texto_tabela
-        and "Rampas" in texto_tabela
-        and "Arborização" in texto_tabela
+        "Esta página não pode ser exibida no momento"
+        in texto_pagina
     ):
-        tabela_dados = tabela
-        break
+
+        print(
+            "O Mobilize retornou uma página "
+            "temporariamente indisponível."
+        )
+
+        continue
 
 
-if tabela_dados is None:
-    raise ValueError(
-        "A tabela esperada não foi encontrada na página."
+    tabelas = soup.find_all(
+        "table"
     )
 
 
+    for tabela in tabelas:
+
+        texto_tabela = tabela.get_text(
+            " ",
+            strip=True,
+        )
+
+        texto_normalizado = (
+            texto_tabela.casefold()
+        )
+
+
+        if (
+            "endereço" in texto_normalizado
+            and "rampas" in texto_normalizado
+            and "arborização" in texto_normalizado
+        ):
+
+            tabela_dados = tabela
+            url_utilizada = url
+
+            break
+
+
+    if tabela_dados is not None:
+        break
+
+
 # =========================================================
-# 4. EXTRAÇÃO DAS LINHAS
+# 4. CONTINGÊNCIA
+# =========================================================
+
+if tabela_dados is None:
+
+    usar_snapshot_anterior(
+        "A tabela do Mobilize não pôde ser "
+        "obtida nesta execução."
+    )
+
+
+print()
+print(
+    "Tabela encontrada em:",
+    url_utilizada,
+)
+
+
+# =========================================================
+# 5. EXTRAÇÃO DAS LINHAS
 # =========================================================
 
 dados = []
 
-for linha in tabela_dados.find_all("tr"):
-    celulas = linha.find_all("td")
+
+for linha in tabela_dados.find_all(
+    "tr"
+):
+
+    celulas = linha.find_all(
+        "td"
+    )
 
     valores = []
 
+
     for celula in celulas:
+
         texto = celula.get_text(
             " ",
             strip=True,
         )
-        valores.append(texto)
 
-    # A tabela possui uma primeira coluna que não será usada.
+        valores.append(
+            texto
+        )
+
+
+    # Algumas versões da página possuem
+    # uma primeira coluna que não é utilizada.
     if len(valores) == 12:
+
         valores = valores[1:]
+
 
     if (
         len(valores) == 11
         and valores[0].strip()
         and valores[-1].strip()
     ):
-        dados.append(valores)
 
+        dados.append(
+            valores
+        )
+
+
+# =========================================================
+# 6. DATAFRAME
+# =========================================================
 
 colunas = [
     "Endereco",
@@ -121,33 +273,74 @@ df_mobilize = pd.DataFrame(
 
 
 # =========================================================
-# 5. SEPARAÇÃO DE CIDADE/LOCALIDADE
+# 7. SEPARAÇÃO DE CIDADE/LOCALIDADE
 # =========================================================
 
 def separar_cidade(texto):
-    texto = str(texto).strip()
 
-    posicao_virgula = texto.rfind(",")
-    posicao_traco = texto.rfind(" - ")
+    texto = str(
+        texto
+    ).strip()
+
+
+    posicao_virgula = texto.rfind(
+        ","
+    )
+
+    posicao_traco = texto.rfind(
+        " - "
+    )
+
 
     if posicao_virgula > posicao_traco:
-        endereco = texto[:posicao_virgula].strip()
-        cidade = texto[posicao_virgula + 1:].strip()
+
+        endereco = texto[
+            :posicao_virgula
+        ].strip()
+
+        cidade = texto[
+            posicao_virgula + 1:
+        ].strip()
+
 
     elif posicao_traco != -1:
-        endereco = texto[:posicao_traco].strip()
-        cidade = texto[posicao_traco + 3:].strip()
+
+        endereco = texto[
+            :posicao_traco
+        ].strip()
+
+        cidade = texto[
+            posicao_traco + 3:
+        ].strip()
+
 
     else:
+
         endereco = texto
         cidade = ""
 
-    return pd.Series([endereco, cidade])
+
+    return pd.Series(
+        [
+            endereco,
+            cidade,
+        ]
+    )
 
 
 if not df_mobilize.empty:
-    df_mobilize[["Endereco", "Cidade"]] = (
-        df_mobilize["Endereco"].apply(separar_cidade)
+
+    df_mobilize[
+        [
+            "Endereco",
+            "Cidade",
+        ]
+    ] = (
+        df_mobilize[
+            "Endereco"
+        ].apply(
+            separar_cidade
+        )
     )
 
 
@@ -170,7 +363,7 @@ df_mobilize = df_mobilize[
 
 
 # =========================================================
-# 6. CONVERSÃO PARA NÚMEROS
+# 8. CONVERSÃO PARA NÚMEROS
 # =========================================================
 
 colunas_numericas = [
@@ -186,51 +379,80 @@ colunas_numericas = [
     "Media",
 ]
 
+
 for coluna in colunas_numericas:
+
     df_mobilize[coluna] = (
         df_mobilize[coluna]
         .astype(str)
-        .str.replace(",", ".", regex=False)
+        .str.replace(
+            ",",
+            ".",
+            regex=False,
+        )
     )
 
-    df_mobilize[coluna] = pd.to_numeric(
-        df_mobilize[coluna],
-        errors="coerce",
+
+    df_mobilize[coluna] = (
+        pd.to_numeric(
+            df_mobilize[coluna],
+            errors="coerce",
+        )
     )
 
 
 # =========================================================
-# 6.1 VALIDAÇÃO DOS REGISTROS
+# 9. VALIDAÇÃO DOS REGISTROS
 # =========================================================
 
-# Remove eventuais linhas de rodapé da tabela que não representam
-# uma calçada avaliada. Um registro válido precisa ter endereço e
-# uma média numérica.
 df_mobilize = df_mobilize[
-    df_mobilize["Endereco"].fillna("").str.strip().ne("")
-    & df_mobilize["Media"].notna()
+    df_mobilize[
+        "Endereco"
+    ]
+    .fillna("")
+    .str.strip()
+    .ne("")
+
+    &
+
+    df_mobilize[
+        "Media"
+    ].notna()
 ].copy()
 
-df_mobilize = df_mobilize.reset_index(drop=True)
 
-# A própria fonte informa que o levantamento contém 228 locais.
+df_mobilize = (
+    df_mobilize
+    .reset_index(
+        drop=True
+    )
+)
+
+
+# O levantamento original informa 228 locais.
 if len(df_mobilize) != 228:
-    raise ValueError(
-        f"Quantidade inesperada de registros: {len(df_mobilize)}. "
-        "Era esperado encontrar 228 locais."
+
+    usar_snapshot_anterior(
+        (
+            "A coleta atual encontrou "
+            f"{len(df_mobilize)} registros, "
+            "mas eram esperados 228."
+        )
     )
 
 
 # =========================================================
-# 7. SALVAMENTO
+# 10. SALVAMENTO
 # =========================================================
 
-os.makedirs("data", exist_ok=True)
+os.makedirs(
+    "data",
+    exist_ok=True,
+)
 
-# QUOTE_ALL evita os problemas de leitura que apareceram no TP2
-# quando endereços continham vírgulas.
+
 df_mobilize.to_csv(
-    "data/calcadas_mobilize.csv",
+    CAMINHO_CSV,
     index=False,
     encoding="utf-8-sig",
     quoting=csv.QUOTE_ALL,
@@ -238,36 +460,77 @@ df_mobilize.to_csv(
 
 
 with open(
-    "data/calcadas_mobilize.txt",
+    CAMINHO_TXT,
     "w",
     encoding="utf-8",
 ) as arquivo:
+
     arquivo.write(
-        df_mobilize.to_string(index=False)
+        df_mobilize.to_string(
+            index=False
+        )
     )
 
 
-# Texto usado no gráfico de frequência de termos.
-# São utilizados somente campos textuais coletados da tabela.
+# =========================================================
+# 11. TEXTO PARA FREQUÊNCIA DE TERMOS
+# =========================================================
+
 texto_termos = (
-    df_mobilize["Endereco"].fillna("").astype(str)
+    df_mobilize[
+        "Endereco"
+    ]
+    .fillna("")
+    .astype(str)
+
     + " "
-    + df_mobilize["Cidade"].fillna("").astype(str)
+
+    + df_mobilize[
+        "Cidade"
+    ]
+    .fillna("")
+    .astype(str)
 )
 
+
 with open(
-    "data/texto_mobilize.txt",
+    CAMINHO_TEXTO,
     "w",
     encoding="utf-8",
 ) as arquivo:
+
     arquivo.write(
-        "\n".join(texto_termos.tolist())
+        "\n".join(
+            texto_termos.tolist()
+        )
     )
 
 
+# =========================================================
+# 12. RESULTADO
+# =========================================================
+
 print()
-print("Quantidade de registros:", len(df_mobilize))
-print("Arquivos criados:")
-print("data/calcadas_mobilize.csv")
-print("data/calcadas_mobilize.txt")
-print("data/texto_mobilize.txt")
+
+print(
+    "Quantidade de registros:",
+    len(df_mobilize),
+)
+
+print()
+
+print(
+    "Arquivos atualizados:"
+)
+
+print(
+    CAMINHO_CSV
+)
+
+print(
+    CAMINHO_TXT
+)
+
+print(
+    CAMINHO_TEXTO
+)

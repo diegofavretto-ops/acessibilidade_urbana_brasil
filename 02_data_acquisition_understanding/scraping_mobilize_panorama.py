@@ -14,44 +14,140 @@ URL = (
     "campanhas/calcadas-do-brasil/levantamento"
 )
 
-
-# =========================================================
-# 2. ACESSO À PÁGINA
-# =========================================================
-
-resposta = requests.get(
-    URL,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
-    timeout=30,
+CAMINHO_CSV = (
+    "data/mobilize_panorama_calcadas.csv"
 )
+
+CAMINHO_TXT = (
+    "data/mobilize_panorama_calcadas.txt"
+)
+
+
+# =========================================================
+# 2. FUNÇÃO PARA PRESERVAR O SNAPSHOT
+# =========================================================
+
+def usar_snapshot_anterior(motivo):
+
+    print()
+    print(
+        "Aviso:",
+        motivo,
+    )
+
+
+    if os.path.exists(
+        CAMINHO_CSV
+    ):
+
+        df_existente = pd.read_csv(
+            CAMINHO_CSV
+        )
+
+        print()
+
+        print(
+            "O último arquivo válido já existente "
+            "será mantido."
+        )
+
+        print(
+            "Arquivo:",
+            CAMINHO_CSV,
+        )
+
+        print(
+            "Quantidade de trechos preservados:",
+            len(df_existente),
+        )
+
+        print(
+            "Nenhum dado anterior foi sobrescrito."
+        )
+
+        raise SystemExit(0)
+
+
+    raise RuntimeError(
+        "A fonte está indisponível e não existe "
+        "um snapshot local anterior."
+    )
+
+
+# =========================================================
+# 3. ACESSO À PÁGINA
+# =========================================================
+
+try:
+
+    resposta = requests.get(
+        URL,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+        },
+        timeout=30,
+    )
+
+
+except requests.RequestException:
+
+    usar_snapshot_anterior(
+        "Não foi possível acessar a página "
+        "Panorama das Calçadas."
+    )
+
 
 print(
     "Status da página:",
     resposta.status_code,
 )
 
-resposta.raise_for_status()
 
-resposta.encoding = resposta.apparent_encoding
+if resposta.status_code != 200:
+
+    usar_snapshot_anterior(
+        (
+            "O Mobilize respondeu com "
+            f"status {resposta.status_code}."
+        )
+    )
 
 
 # =========================================================
-# 3. BEAUTIFULSOUP
+# 4. BEAUTIFULSOUP
 # =========================================================
 
 soup = BeautifulSoup(
-    resposta.text,
+    resposta.content,
     "html.parser",
 )
 
 
+texto_pagina = soup.get_text(
+    " ",
+    strip=True,
+)
+
+
+# O site pode responder HTTP 200
+# exibindo internamente uma página de erro.
+if (
+    "Esta página não pode ser exibida no momento"
+    in texto_pagina
+):
+
+    usar_snapshot_anterior(
+        "O Mobilize está temporariamente "
+        "indisponível para coleta."
+    )
+
+
 # =========================================================
-# 4. TERMOS DO PROJETO
+# 5. TERMOS DO PROJETO
 # =========================================================
 
 categorias = {
+
     "Irregularidades": [
         "irregularidade",
         "irregularidades",
@@ -102,7 +198,7 @@ categorias = {
 
 
 # =========================================================
-# 5. EXTRAÇÃO DOS TEXTOS
+# 6. EXTRAÇÃO DOS TEXTOS
 # =========================================================
 
 dados = []
@@ -125,17 +221,21 @@ for elemento in elementos:
         strip=True,
     )
 
+
     # Ignora textos muito pequenos.
     if len(texto) < 30:
         continue
 
-    # Evita registros repetidos.
+
+    # Evita duplicação.
     if texto in textos_vistos:
         continue
+
 
     texto_minusculo = (
         texto.casefold()
     )
+
 
     categorias_encontradas = []
 
@@ -156,36 +256,40 @@ for elemento in elementos:
                 break
 
 
-    # Guarda somente textos relacionados
-    # ao tema do projeto.
     if categorias_encontradas:
 
         textos_vistos.add(
             texto
         )
 
+
         dados.append(
             {
-                "Ordem": len(dados) + 1,
+                "Ordem":
+                    len(dados) + 1,
 
-                "Categorias": "; ".join(
-                    categorias_encontradas
-                ),
+                "Categorias":
+                    "; ".join(
+                        categorias_encontradas
+                    ),
 
-                "Texto": texto,
+                "Texto":
+                    texto,
 
-                "Fonte": (
-                    "Mobilize Brasil - "
-                    "Panorama das calçadas"
-                ),
+                "Fonte":
+                    (
+                        "Mobilize Brasil - "
+                        "Panorama das calçadas"
+                    ),
 
-                "URL": URL,
+                "URL":
+                    URL,
             }
         )
 
 
 # =========================================================
-# 6. DATAFRAME
+# 7. DATAFRAME
 # =========================================================
 
 df_panorama = pd.DataFrame(
@@ -194,31 +298,30 @@ df_panorama = pd.DataFrame(
 
 
 # =========================================================
-# 7. VALIDAÇÃO
+# 8. VALIDAÇÃO
 # =========================================================
 
 if df_panorama.empty:
 
-    raise ValueError(
-        "Nenhum trecho relacionado "
-        "ao projeto foi encontrado."
+    usar_snapshot_anterior(
+        "Nenhum trecho relacionado ao projeto "
+        "foi encontrado na página atual."
     )
 
 
-# Não existe uma quantidade oficial fixa
-# de parágrafos nessa página.
-# Apenas verificamos se a coleta encontrou
-# conteúdo suficiente para análise.
 if len(df_panorama) < 3:
 
-    raise ValueError(
-        "Foram encontrados poucos trechos. "
-        "A página pode ter sido alterada."
+    usar_snapshot_anterior(
+        (
+            "Foram encontrados apenas "
+            f"{len(df_panorama)} trechos. "
+            "A estrutura da página pode ter sido alterada."
+        )
     )
 
 
 # =========================================================
-# 8. SALVAMENTO
+# 9. SALVAMENTO
 # =========================================================
 
 os.makedirs(
@@ -228,14 +331,14 @@ os.makedirs(
 
 
 df_panorama.to_csv(
-    "data/mobilize_panorama_calcadas.csv",
+    CAMINHO_CSV,
     index=False,
     encoding="utf-8-sig",
 )
 
 
 with open(
-    "data/mobilize_panorama_calcadas.txt",
+    CAMINHO_TXT,
     "w",
     encoding="utf-8",
 ) as arquivo:
@@ -252,7 +355,7 @@ with open(
 
 
 # =========================================================
-# 9. RESULTADO
+# 10. RESULTADO
 # =========================================================
 
 print()
@@ -270,7 +373,9 @@ print(
 
 
 categorias_encontradas = (
-    df_panorama["Categorias"]
+    df_panorama[
+        "Categorias"
+    ]
     .str.split("; ")
     .explode()
     .drop_duplicates()
@@ -289,13 +394,13 @@ for categoria in categorias_encontradas:
 print()
 
 print(
-    "Arquivos criados:"
+    "Arquivos atualizados:"
 )
 
 print(
-    "data/mobilize_panorama_calcadas.csv"
+    CAMINHO_CSV
 )
 
 print(
-    "data/mobilize_panorama_calcadas.txt"
+    CAMINHO_TXT
 )
