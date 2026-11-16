@@ -229,13 +229,11 @@ def adicionar_observacao(
             ),
         )
 
-
     novo_registro = pd.DataFrame(
         [
             observacao.model_dump()
         ]
     )
-
 
     if CAMINHO_OBSERVACOES.exists():
 
@@ -255,13 +253,11 @@ def adicionar_observacao(
 
         observacoes = novo_registro
 
-
     observacoes.to_csv(
         CAMINHO_OBSERVACOES,
         index=False,
         encoding="utf-8-sig",
     )
-
 
     return {
         "mensagem": (
@@ -322,7 +318,6 @@ def gerar_resumo_uf(
         entrada.estado
     )
 
-
     indicadores = {
         "calcada_passeio_pct": float(
             estado["Calcada_passeio_pct"]
@@ -341,7 +336,6 @@ def gerar_resumo_uf(
             ]
         ),
     }
-
 
     prompt = f"""
 Analise somente os dados abaixo.
@@ -377,13 +371,13 @@ Regras obrigatórias:
 Produza um resumo objetivo.
 """.strip()
 
-
     try:
 
-       resumo = gerar_resposta(
-    prompt,
-    max_new_tokens=80,
-)
+        resumo = gerar_resposta(
+            prompt,
+            max_new_tokens=80,
+        )
+
     except FileNotFoundError as erro:
 
         raise HTTPException(
@@ -414,9 +408,7 @@ Produza um resumo objetivo.
             ),
         ) from erro
 
-
     status = obter_status_modelo()
-
 
     return {
         "estado": estado["Estado"],
