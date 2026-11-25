@@ -2,6 +2,7 @@ from collections import Counter
 import re
 
 import pandas as pd
+import requests
 import streamlit as st
 
 from comum import (
@@ -57,7 +58,7 @@ criterios_mobilize = {
 
 
 # =========================================================
-# 4. ESTATÍSTICAS DAS AVALIAÇÕES
+# 4. AVALIAÇÕES DAS CALÇADAS
 # =========================================================
 
 st.header("1. Avaliações das calçadas")
@@ -66,7 +67,6 @@ st.write(
     "O levantamento atribui notas de 0 a 10 para diferentes "
     "critérios relacionados às condições das calçadas."
 )
-
 
 criterio_nome = st.selectbox(
     "Selecione um critério:",
@@ -78,11 +78,9 @@ criterio = criterios_mobilize[
     criterio_nome
 ]
 
-
 st.caption(
     "Unidade de medida: nota de 0 a 10."
 )
-
 
 if criterio == "Irregularidades":
 
@@ -93,9 +91,12 @@ if criterio == "Irregularidades":
     )
 
 
-media = df_mobilize[
-    criterio
-].mean()
+media = (
+    df_mobilize[
+        criterio
+    ]
+    .mean()
+)
 
 
 quantidade_avaliacoes = (
@@ -135,7 +136,9 @@ ranking = (
         ]
     ]
     .dropna(
-        subset=[criterio]
+        subset=[
+            criterio
+        ]
     )
     .rename(
         columns={
@@ -151,10 +154,6 @@ ranking = (
     )
 )
 
-
-# =========================================================
-# 5. RANKINGS
-# =========================================================
 
 st.subheader(
     "Destaques do critério selecionado"
@@ -221,8 +220,10 @@ with st.expander(
 
 
 # =========================================================
-# 6. VISÃO GERAL DOS CRITÉRIOS
+# 5. COMPARAÇÃO ENTRE OS CRITÉRIOS
 # =========================================================
+
+st.divider()
 
 st.header(
     "2. Comparação entre os critérios"
@@ -339,8 +340,10 @@ st.caption(
 
 
 # =========================================================
-# 7. ANÁLISE TEXTUAL
+# 6. TERMOS RECORRENTES
 # =========================================================
+
+st.divider()
 
 st.header(
     "3. Termos recorrentes no Panorama das Calçadas"
@@ -370,8 +373,6 @@ palavras = re.findall(
 )
 
 
-# Palavras funcionais muito comuns que não ajudam
-# na interpretação do conteúdo.
 palavras_excluidas = {
     "aos",
     "ainda",
@@ -495,7 +496,6 @@ if mais_frequentes:
         ],
     )
 
-
     st.bar_chart(
         df_frequencia,
         x="Termo",
@@ -538,8 +538,10 @@ else:
 
 
 # =========================================================
-# 8. PANORAMA TEXTUAL DAS CALÇADAS
+# 7. PANORAMA TEXTUAL
 # =========================================================
+
+st.divider()
 
 st.header(
     "4. Panorama textual das calçadas"
@@ -602,7 +604,9 @@ else:
 
 st.metric(
     "Trechos encontrados",
-    len(df_filtrado),
+    len(
+        df_filtrado
+    ),
 )
 
 
@@ -619,7 +623,7 @@ st.dataframe(
 
 
 # =========================================================
-# 9. FREQUÊNCIA DAS CATEGORIAS
+# 8. FREQUÊNCIA DAS CATEGORIAS
 # =========================================================
 
 st.subheader(
@@ -675,3 +679,330 @@ st.caption(
     "Por isso, a soma das frequências pode ser maior que "
     "a quantidade total de trechos coletados."
 )
+
+
+# =========================================================
+# 9. SUMARIZAÇÃO COM IA LOCAL
+# =========================================================
+
+st.divider()
+
+st.header(
+    "5. Sumarização dos textos com IA local"
+)
+
+
+st.write(
+    "Nesta etapa, os textos coletados por Web Scraping "
+    "podem ser sintetizados pelo modelo de linguagem local."
+)
+
+
+st.info(
+    "O modelo recebe somente os trechos associados à categoria "
+    "escolhida. A resposta passa por uma validação de fidelidade "
+    "antes de ser apresentada ao usuário."
+)
+
+
+# =========================================================
+# 10. CONFIGURAÇÃO DA API
+# =========================================================
+
+with st.expander(
+    "Configuração da API"
+):
+
+    api_url = st.text_input(
+        "Endereço da API:",
+        value=(
+            "http://127.0.0.1:8000"
+        ),
+        key="mobilize_api_url",
+    )
+
+
+# =========================================================
+# 11. CATEGORIA DA SUMARIZAÇÃO
+# =========================================================
+
+categoria_ia = st.selectbox(
+    "Selecione uma categoria para gerar a síntese:",
+    categorias_panorama,
+    key="mobilize_categoria_ia",
+)
+
+
+trechos_categoria = df_panorama[
+    df_panorama[
+        "Categorias"
+    ]
+    .str.contains(
+        categoria_ia,
+        regex=False,
+        na=False,
+    )
+]
+
+
+col1, col2 = st.columns(2)
+
+
+with col1:
+
+    st.metric(
+        "Categoria selecionada",
+        categoria_ia,
+    )
+
+
+with col2:
+
+    st.metric(
+        "Trechos disponíveis",
+        len(
+            trechos_categoria
+        ),
+    )
+
+
+# =========================================================
+# 12. EVIDÊNCIAS ENVIADAS AO MODELO
+# =========================================================
+
+with st.expander(
+    "Ver textos que serão enviados ao modelo"
+):
+
+    st.dataframe(
+        trechos_categoria[
+            [
+                "Categorias",
+                "Texto",
+            ]
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
+# =========================================================
+# 13. BOTÃO DE GERAÇÃO
+# =========================================================
+
+if st.button(
+    "Gerar síntese com IA local",
+    key="mobilize_gerar_sintese",
+    use_container_width=True,
+):
+
+    try:
+
+        with st.spinner(
+            "O modelo local está analisando os textos..."
+        ):
+
+            resposta = requests.post(
+                (
+                    f"{api_url}"
+                    "/ia/resumo-mobilize"
+                ),
+                json={
+                    "categoria":
+                        categoria_ia,
+                },
+                timeout=180,
+            )
+
+
+        if resposta.status_code == 200:
+
+            resultado = resposta.json()
+
+            st.session_state[
+                "mobilize_resumo_ia"
+            ] = resultado
+
+
+        elif resposta.status_code == 404:
+
+            st.error(
+                "A categoria selecionada não foi "
+                "encontrada nos dados."
+            )
+
+
+        elif resposta.status_code == 422:
+
+            st.error(
+                "Os dados enviados não passaram "
+                "pela validação da API."
+            )
+
+
+        elif resposta.status_code == 503:
+
+            st.error(
+                "O modelo local ou os dados necessários "
+                "não estão disponíveis."
+            )
+
+
+        else:
+
+            st.error(
+                (
+                    "A API retornou o erro "
+                    f"{resposta.status_code}."
+                )
+            )
+
+
+    except requests.Timeout:
+
+        st.error(
+            "O modelo demorou mais do que o "
+            "tempo limite para responder."
+        )
+
+
+    except requests.RequestException:
+
+        st.warning(
+            "Não foi possível conectar com a FastAPI. "
+            "Verifique se ela está sendo executada em "
+            "http://127.0.0.1:8000."
+        )
+
+
+# =========================================================
+# 14. RESULTADO DA SUMARIZAÇÃO
+# =========================================================
+
+resultado_ia = st.session_state.get(
+    "mobilize_resumo_ia"
+)
+
+
+if resultado_ia:
+
+    metodo_resumo = resultado_ia.get(
+        "metodo_resumo",
+        "Método não informado",
+    )
+
+
+    # -----------------------------------------------------
+    # TRANSPARÊNCIA SOBRE A ORIGEM DA RESPOSTA
+    # -----------------------------------------------------
+
+    if (
+        metodo_resumo
+        == "Resumo de segurança baseado nas evidências"
+    ):
+
+        st.warning(
+            "A resposta do modelo não passou pela validação "
+            "de fidelidade. Por segurança, o sistema apresentou "
+            "uma síntese construída diretamente a partir das "
+            "informações explícitas nos textos coletados."
+        )
+
+    elif (
+        metodo_resumo
+        == "LLM - resposta corrigida"
+    ):
+
+        st.success(
+            "O modelo gerou uma primeira resposta que precisou "
+            "ser corrigida. A versão exibida passou pela "
+            "validação automática."
+        )
+
+    else:
+
+        st.success(
+            "A síntese produzida pelo modelo passou pela "
+            "validação automática."
+        )
+
+
+    st.subheader(
+        "Síntese gerada"
+    )
+
+
+    col1, col2, col3 = st.columns(3)
+
+
+    with col1:
+
+        st.metric(
+            "Trechos utilizados",
+            resultado_ia[
+                "quantidade_trechos"
+            ],
+        )
+
+
+    with col2:
+
+        st.metric(
+            "Modelo",
+            resultado_ia[
+                "modelo"
+            ],
+        )
+
+
+    with col3:
+
+        st.metric(
+            "Execução",
+            resultado_ia[
+                "dispositivo"
+            ].upper(),
+        )
+
+
+    st.caption(
+        f"Método da síntese: {metodo_resumo}"
+    )
+
+
+    st.markdown(
+        "#### Resultado"
+    )
+
+
+    st.write(
+        resultado_ia[
+            "resumo"
+        ]
+    )
+
+
+    with st.expander(
+        "Ver evidências textuais utilizadas"
+    ):
+
+        for indice, trecho in enumerate(
+            resultado_ia[
+                "trechos"
+            ],
+            start=1,
+        ):
+
+            st.markdown(
+                f"**Trecho {indice}**"
+            )
+
+            st.write(
+                trecho
+            )
+
+
+    st.caption(
+        "A síntese deve ser interpretada juntamente com "
+        "os textos originais apresentados como evidências."
+    )

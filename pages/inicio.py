@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from comum import carregar_dados_ibge
@@ -11,457 +12,450 @@ df = carregar_dados_ibge()
 
 
 # =========================================================
-# 2. CABEÇALHO
+# 2. APRESENTAÇÃO DO PROJETO
 # =========================================================
 
-st.title(
-    "Acessibilidade Urbana no Brasil"
-)
+st.title("Acessibilidade Urbana no Brasil")
 
 st.subheader(
-    "Indicadores urbanos, comparações e análise com IA local"
+    "Ciência de Dados e Inteligência Artificial "
+    "aplicadas à acessibilidade urbana"
 )
 
 st.write(
-    "Aplicação desenvolvida para organizar, visualizar e comparar "
-    "dados relacionados às condições do entorno urbano brasileiro, "
-    "com foco em aspectos que influenciam a circulação e o conforto "
-    "dos pedestres."
+    "Esta aplicação reúne indicadores públicos e informações "
+    "coletadas na web para facilitar a análise das condições "
+    "do ambiente urbano brasileiro, com foco na mobilidade "
+    "e no conforto dos pedestres."
 )
 
 st.divider()
 
 
 # =========================================================
-# 3. INDICADORES RÁPIDOS
+# 3. VISÃO GERAL
 # =========================================================
 
-st.subheader(
-    "Visão geral do projeto"
-)
-
-col1, col2, col3, col4 = st.columns(
-    4
-)
-
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
 
     st.metric(
-        label="Unidades da Federação",
-        value=len(df),
+        "Unidades da Federação",
+        df["Estado"].nunique(),
     )
-
 
 with col2:
 
     st.metric(
-        label="Regiões brasileiras",
-        value=df["Regiao"].nunique(),
+        "Regiões brasileiras",
+        df["Regiao"].nunique(),
     )
-
 
 with col3:
 
     st.metric(
-        label="Fonte principal",
-        value="IBGE",
+        "Fontes de dados",
+        2,
     )
-
 
 with col4:
 
     st.metric(
-        label="Modelo local",
-        value="Qwen 0.5B",
+        "Modelo local",
+        "Qwen 0.5B",
     )
 
-
 st.caption(
-    "Base principal: Censo Demográfico 2022 - "
+    "Fonte principal: Censo Demográfico 2022 — "
     "Características Urbanísticas do Entorno dos Domicílios."
 )
 
 
 # =========================================================
-# 4. OBJETIVO DO PROJETO
+# 4. PROBLEMA E OBJETIVO
 # =========================================================
 
 st.divider()
 
-st.header(
-    "Sobre o projeto"
-)
+st.header("Sobre o projeto")
 
-
-col_esquerda, col_direita = st.columns(
-    2
-)
-
-
-with col_esquerda:
-
-    st.subheader(
-        "Problema"
-    )
-
-    st.write(
-        "Indicadores urbanos estão disponíveis em bases públicas, "
-        "mas nem sempre são simples de consultar e comparar."
-    )
-
-    st.write(
-        "O projeto busca facilitar a leitura dessas informações "
-        "por meio de uma interface interativa."
-    )
-
-
-with col_direita:
-
-    st.subheader(
-        "Objetivo"
-    )
-
-    st.write(
-        "Permitir que estudantes, profissionais, gestores e "
-        "cidadãos consultem e comparem indicadores das Unidades "
-        "da Federação de forma simples."
-    )
-
-    st.write(
-        "O projeto também utiliza uma API e um modelo de linguagem "
-        "local para gerar resumos a partir dos dados selecionados."
-    )
-
-
-# =========================================================
-# 5. FONTES
-# =========================================================
-
-st.divider()
-
-st.header(
-    "Fontes utilizadas"
-)
-
-
-col_ibge, col_mobilize = st.columns(
-    2
-)
-
-
-with col_ibge:
-
-    st.subheader(
-        "IBGE"
-    )
-
-    st.write(
-        "**Censo Demográfico 2022**"
-    )
-
-    st.write(
-        "Características Urbanísticas do "
-        "Entorno dos Domicílios."
-    )
-
-    st.write(
-        "Tabela SIDRA 9584."
-    )
-
-    st.success(
-        "Fonte quantitativa principal do projeto."
-    )
-
-
-with col_mobilize:
-
-    st.subheader(
-        "Mobilize Brasil"
-    )
-
-    st.write(
-        "Dados complementares relacionados "
-        "às condições das calçadas."
-    )
-
-    st.write(
-        "As informações foram obtidas por "
-        "Web Scraping."
-    )
-
-    st.info(
-        "Fonte utilizada apenas como referência complementar."
-    )
-
-
-# =========================================================
-# 6. CUIDADO METODOLÓGICO
-# =========================================================
-
-st.warning(
-    "Os percentuais do IBGE representam características observadas "
-    "no entorno dos domicílios considerados no levantamento. "
-    "Eles não devem ser interpretados diretamente como percentual "
-    "de todas as ruas de cada estado."
-)
-
-
-# =========================================================
-# 7. PRINCIPAIS INDICADORES
-# =========================================================
-
-st.divider()
-
-st.header(
-    "Principais indicadores analisados"
-)
-
-
-col1, col2, col3 = st.columns(
-    3
-)
-
+col1, col2 = st.columns(2)
 
 with col1:
 
-    with st.container(
-        border=True
-    ):
+    st.subheader("Problema")
 
-        st.subheader(
-            "Infraestrutura"
-        )
+    st.write(
+        "Apesar da disponibilidade de dados públicos sobre "
+        "as condições urbanas, a consulta e a comparação "
+        "dessas informações nem sempre são simples."
+    )
 
-        st.write(
-            "• Calçada/passeio"
-        )
-
-        st.write(
-            "• Rampas"
-        )
-
-        st.write(
-            "• Via para bicicleta"
-        )
-
+    st.write(
+        "A dispersão dos dados dificulta a identificação "
+        "de diferenças entre estados e regiões brasileiras."
+    )
 
 with col2:
 
-    with st.container(
-        border=True
-    ):
+    st.subheader("Objetivo")
 
-        st.subheader(
-            "Circulação"
+    st.write(
+        "Organizar e apresentar informações relacionadas "
+        "à acessibilidade urbana em uma aplicação interativa, "
+        "facilitando a consulta e a comparação dos indicadores."
+    )
+
+    st.write(
+        "A Inteligência Artificial é utilizada como recurso "
+        "complementar para interpretação dos dados e "
+        "sumarização dos textos coletados."
+    )
+
+
+# =========================================================
+# 5. FONTES DE DADOS
+# =========================================================
+
+st.divider()
+
+st.header("Fontes de dados")
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    with st.container(border=True):
+
+        st.subheader("IBGE")
+
+        st.write(
+            "**Censo Demográfico 2022**"
         )
 
         st.write(
-            "• Calçadas sem obstáculos"
+            "Características Urbanísticas do "
+            "Entorno dos Domicílios."
         )
 
         st.write(
-            "• Ponto de ônibus/van"
+            "Tabela SIDRA 9584."
         )
 
         st.write(
-            "• Iluminação pública"
+            "Fonte quantitativa principal utilizada "
+            "para as comparações entre estados e regiões."
         )
 
+        st.markdown(
+            "[Consultar tabela SIDRA 9584]"
+            "(https://sidra.ibge.gov.br/tabela/9584)"
+        )
+
+with col2:
+
+    with st.container(border=True):
+
+        st.subheader("Mobilize Brasil")
+
+        st.write(
+            "**Campanha Calçadas do Brasil**"
+        )
+
+        st.write(
+            "Informações complementares sobre as condições "
+            "das calçadas, obtidas por Web Scraping."
+        )
+
+        st.write(
+            "Os textos coletados também são utilizados "
+            "na funcionalidade de sumarização com IA."
+        )
+
+        st.markdown(
+            "[Consultar Mobilize Brasil]"
+            "(https://www.mobilize.org.br/)"
+        )
+
+st.caption(
+    "As fontes possuem metodologias diferentes e devem "
+    "ser interpretadas de forma complementar."
+)
+
+
+# =========================================================
+# 6. PRINCIPAIS INDICADORES
+# =========================================================
+
+st.divider()
+
+st.header("Indicadores analisados")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+
+    with st.container(border=True):
+
+        st.subheader("Infraestrutura")
+
+        st.markdown(
+            "- Calçada ou passeio\n"
+            "- Rampas de acessibilidade\n"
+            "- Via para bicicleta"
+        )
+
+with col2:
+
+    with st.container(border=True):
+
+        st.subheader("Circulação")
+
+        st.markdown(
+            "- Calçadas sem obstáculos\n"
+            "- Ponto de ônibus ou van\n"
+            "- Iluminação pública"
+        )
 
 with col3:
 
-    with st.container(
-        border=True
-    ):
+    with st.container(border=True):
 
-        st.subheader(
-            "Ambiente urbano"
+        st.subheader("Ambiente urbano")
+
+        st.markdown(
+            "- Arborização\n"
+            "- Características do entorno\n"
+            "- Diferenças regionais"
         )
 
-        st.write(
-            "• Arborização"
-        )
-
-        st.write(
-            "• Condições do entorno"
-        )
-
-        st.write(
-            "• Comparações entre UFs"
-        )
+st.info(
+    "Os percentuais do IBGE representam características "
+    "observadas no entorno dos domicílios considerados "
+    "na pesquisa, e não percentuais de todas as ruas "
+    "de cada estado."
+)
 
 
 # =========================================================
-# 8. RECURSOS DA APLICAÇÃO
+# 7. RECURSOS DE INTELIGÊNCIA ARTIFICIAL
 # =========================================================
 
 st.divider()
 
-st.header(
-    "O que a aplicação permite fazer"
-)
-
-
-col1, col2 = st.columns(
-    2
-)
-
-
-with col1:
-
-    with st.container(
-        border=True
-    ):
-
-        st.subheader(
-            "Análise de dados"
-        )
-
-        st.write(
-            "📊 Visualizar indicadores por estado"
-        )
-
-        st.write(
-            "🔎 Comparar Unidades da Federação"
-        )
-
-        st.write(
-            "🚶 Consultar referências do Mobilize"
-        )
-
-        st.write(
-            "📈 Explorar tabelas e gráficos"
-        )
-
-
-with col2:
-
-    with st.container(
-        border=True
-    ):
-
-        st.subheader(
-            "Integração"
-        )
-
-        st.write(
-            "📁 Adicionar dados por arquivo CSV"
-        )
-
-        st.write(
-            "🔗 Consultar dados pela FastAPI"
-        )
-
-        st.write(
-            "🤖 Gerar resumos com IA local"
-        )
-
-        st.write(
-            "💻 Executar o modelo no próprio computador"
-        )
-
-
-# =========================================================
-# 9. COMO NAVEGAR
-# =========================================================
-
-st.divider()
-
-st.header(
-    "Explore a aplicação"
-)
+st.header("Inteligência Artificial aplicada")
 
 st.write(
-    "Use o menu lateral para acessar cada etapa da análise."
+    "O projeto utiliza o modelo de linguagem "
+    "Qwen2.5-0.5B-Instruct, executado localmente "
+    "e integrado à aplicação por meio da FastAPI."
 )
 
-
-col1, col2 = st.columns(
-    2
-)
-
+col1, col2 = st.columns(2)
 
 with col1:
 
-    with st.container(
-        border=True
-    ):
+    with st.container(border=True):
 
-        st.subheader(
-            "📊 Panorama IBGE"
-        )
+        st.subheader("Análise de indicadores")
 
         st.write(
-            "Consulte os principais indicadores "
-            "das Unidades da Federação."
+            "O modelo recebe indicadores selecionados "
+            "do IBGE e produz um resumo textual "
+            "sobre a Unidade da Federação escolhida."
         )
 
-
-    with st.container(
-        border=True
-    ):
-
-        st.subheader(
-            "🔎 Comparações"
+        st.caption(
+            "Disponível na página API e LLM."
         )
-
-        st.write(
-            "Compare estados, regiões e indicadores."
-        )
-
-
-    with st.container(
-        border=True
-    ):
-
-        st.subheader(
-            "🚶 Referências Web"
-        )
-
-        st.write(
-            "Explore os dados complementares "
-            "obtidos no Mobilize Brasil."
-        )
-
 
 with col2:
 
-    with st.container(
-        border=True
-    ):
+    with st.container(border=True):
 
-        st.subheader(
-            "📁 Upload e Download"
-        )
+        st.subheader("Sumarização de textos")
 
         st.write(
-            "Adicione ou exporte dados "
-            "complementares."
+            "O modelo recebe textos coletados do "
+            "Mobilize Brasil e tenta produzir uma "
+            "síntese relacionada à categoria selecionada."
         )
 
-
-    with st.container(
-        border=True
-    ):
-
-        st.subheader(
-            "🤖 API e LLM"
+        st.caption(
+            "Disponível na página Referências Web."
         )
 
-        st.write(
-            "Consulte a FastAPI e gere resumos "
-            "com o modelo Qwen executado localmente."
-        )
+st.caption(
+    "As respostas da IA podem apresentar imprecisões. "
+    "Os indicadores e os textos originais devem ser "
+    "consultados para conferência."
+)
 
 
 # =========================================================
-# 10. CONTEXTO FINAL
+# 8. METODOLOGIA TDSP
+# =========================================================
+
+st.divider()
+
+st.header("Metodologia de Ciência de Dados")
+
+st.write(
+    "O desenvolvimento foi organizado com base no "
+    "Team Data Science Process (TDSP)."
+)
+
+etapas = [
+    (
+        "01",
+        "Entendimento do negócio",
+        "Definição do problema, dos objetivos "
+        "e do contexto da acessibilidade urbana.",
+    ),
+    (
+        "02",
+        "Aquisição e entendimento dos dados",
+        "Coleta, organização e análise dos dados "
+        "do IBGE e do Mobilize Brasil.",
+    ),
+    (
+        "03",
+        "Modelagem",
+        "Análise exploratória, integração do modelo "
+        "de linguagem e Engenharia de Prompt.",
+    ),
+    (
+        "04",
+        "Implantação",
+        "Integração do dashboard Streamlit, "
+        "FastAPI e modelo local.",
+    ),
+    (
+        "05",
+        "Aceitação da solução",
+        "Testes de funcionamento, análise dos resultados "
+        "e identificação das limitações.",
+    ),
+]
+
+for numero, titulo, descricao in etapas:
+
+    with st.container(border=True):
+
+        col_numero, col_descricao = st.columns([1, 9])
+
+        with col_numero:
+
+            st.subheader(numero)
+
+        with col_descricao:
+
+            st.markdown(f"**{titulo}**")
+
+            st.write(descricao)
+
+
+# =========================================================
+# 9. ESG E ODS
+# =========================================================
+
+st.divider()
+
+st.header("Sustentabilidade e inclusão urbana")
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    st.subheader("ODS 11")
+
+    st.write(
+        "**Cidades e Comunidades Sustentáveis**"
+    )
+
+    st.write(
+        "O projeto está relacionado à análise das condições "
+        "urbanas e da mobilidade de pedestres, contribuindo "
+        "para a discussão sobre cidades mais inclusivas "
+        "e acessíveis."
+    )
+
+    st.markdown(
+        "[Conhecer o ODS 11]"
+        "(https://brasil.un.org/pt-br/sdgs/11)"
+    )
+
+with col2:
+
+    st.subheader("ESG — Dimensão Social")
+
+    st.write(
+        "A acessibilidade urbana possui relação com "
+        "inclusão social, mobilidade, segurança e "
+        "qualidade de vida."
+    )
+
+    st.write(
+        "A análise dos indicadores pode apoiar estudos "
+        "e discussões sobre planejamento urbano e "
+        "melhoria dos espaços públicos."
+    )
+
+
+# =========================================================
+# 10. NAVEGAÇÃO
+# =========================================================
+
+st.divider()
+
+st.header("Explore a aplicação")
+
+st.write(
+    "Utilize o menu lateral para acessar as funcionalidades."
+)
+
+paginas = [
+    (
+        "Panorama IBGE",
+        "Consulte indicadores e rankings estaduais.",
+    ),
+    (
+        "Comparações",
+        "Compare estados, regiões e indicadores.",
+    ),
+    (
+        "Referências Web",
+        "Explore os dados do Mobilize e utilize "
+        "a sumarização de textos com IA local.",
+    ),
+    (
+        "Upload e Download",
+        "Adicione ou exporte dados complementares.",
+    ),
+    (
+        "API e LLM",
+        "Consulte a API e gere resumos dos indicadores "
+        "com Inteligência Artificial.",
+    ),
+]
+
+for titulo, descricao in paginas:
+
+    with st.container(border=True):
+
+        st.markdown(f"**{titulo}**")
+
+        st.write(descricao)
+
+
+# =========================================================
+# 11. IDENTIFICAÇÃO
 # =========================================================
 
 st.divider()
 
 st.caption(
-    "Projeto relacionado ao ODS 11 - "
-    "Cidades e Comunidades Sustentáveis."
+    "Diego Favretto | Ciência de Dados | "
+    "Projeto de Bloco — Inteligência Artificial Aplicada"
 )
