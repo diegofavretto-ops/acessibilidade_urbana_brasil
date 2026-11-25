@@ -1,461 +1,200 @@
-
+import pandas as pd
 import streamlit as st
 
-from comum import carregar_dados_ibge
+from comum import carregar_dados_ibge, indicadores, indicadores_principais
 
-
-# =========================================================
-# 1. CARREGAMENTO DOS DADOS
-# =========================================================
 
 df = carregar_dados_ibge()
 
 
-# =========================================================
-# 2. APRESENTAÇÃO DO PROJETO
-# =========================================================
+def percentual(valor):
+    return f"{valor:.1f}%".replace(".", ",")
 
+
+def pontos_percentuais(valor):
+    if abs(valor) < 0.05:
+        valor = 0.0
+    return f"{valor:+.1f} p.p.".replace(".", ",")
+
+
+# 1. Apresentação e abrangência do painel
 st.title("Acessibilidade Urbana no Brasil")
-
-st.subheader(
-    "Ciência de Dados e Inteligência Artificial "
-    "aplicadas à acessibilidade urbana"
+st.caption("Censo Demográfico 2022 | Mobilidade de pedestres | ODS 11")
+st.markdown(
+    "Explore as condições do entorno dos domicílios brasileiros, "
+    "compare estados e regiões e consulte informações sobre calçadas, "
+    "rampas, circulação e ambiente urbano."
 )
 
-st.write(
-    "Esta aplicação reúne indicadores públicos e informações "
-    "coletadas na web para facilitar a análise das condições "
-    "do ambiente urbano brasileiro, com foco na mobilidade "
-    "e no conforto dos pedestres."
-)
+col1, col2, col3 = st.columns(3)
+col1.metric("Unidades da Federação", df["Estado"].nunique())
+col2.metric("Regiões brasileiras", df["Regiao"].nunique())
+col3.metric("Indicadores do IBGE", len(indicadores))
 
-st.divider()
-
-
-# =========================================================
-# 3. VISÃO GERAL
-# =========================================================
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-
-    st.metric(
-        "Unidades da Federação",
-        df["Estado"].nunique(),
-    )
-
-with col2:
-
-    st.metric(
-        "Regiões brasileiras",
-        df["Regiao"].nunique(),
-    )
-
-with col3:
-
-    st.metric(
-        "Fontes de dados",
-        2,
-    )
-
-with col4:
-
-    st.metric(
-        "Modelo local",
-        "Qwen 0.5B",
-    )
-
-st.caption(
-    "Fonte principal: Censo Demográfico 2022 — "
-    "Características Urbanísticas do Entorno dos Domicílios."
-)
-
-
-# =========================================================
-# 4. PROBLEMA E OBJETIVO
-# =========================================================
-
-st.divider()
-
-st.header("Sobre o projeto")
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.subheader("Problema")
-
-    st.write(
-        "Apesar da disponibilidade de dados públicos sobre "
-        "as condições urbanas, a consulta e a comparação "
-        "dessas informações nem sempre são simples."
-    )
-
-    st.write(
-        "A dispersão dos dados dificulta a identificação "
-        "de diferenças entre estados e regiões brasileiras."
-    )
-
-with col2:
-
-    st.subheader("Objetivo")
-
-    st.write(
-        "Organizar e apresentar informações relacionadas "
-        "à acessibilidade urbana em uma aplicação interativa, "
-        "facilitando a consulta e a comparação dos indicadores."
-    )
-
-    st.write(
-        "A Inteligência Artificial é utilizada como recurso "
-        "complementar para interpretação dos dados e "
-        "sumarização dos textos coletados."
-    )
-
-
-# =========================================================
-# 5. FONTES DE DADOS
-# =========================================================
-
-st.divider()
-
-st.header("Fontes de dados")
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    with st.container(border=True):
-
-        st.subheader("IBGE")
-
-        st.write(
-            "**Censo Demográfico 2022**"
-        )
-
-        st.write(
-            "Características Urbanísticas do "
-            "Entorno dos Domicílios."
-        )
-
-        st.write(
-            "Tabela SIDRA 9584."
-        )
-
-        st.write(
-            "Fonte quantitativa principal utilizada "
-            "para as comparações entre estados e regiões."
-        )
-
-        st.markdown(
-            "[Consultar tabela SIDRA 9584]"
-            "(https://sidra.ibge.gov.br/tabela/9584)"
-        )
-
-with col2:
-
-    with st.container(border=True):
-
-        st.subheader("Mobilize Brasil")
-
-        st.write(
-            "**Campanha Calçadas do Brasil**"
-        )
-
-        st.write(
-            "Informações complementares sobre as condições "
-            "das calçadas, obtidas por Web Scraping."
-        )
-
-        st.write(
-            "Os textos coletados também são utilizados "
-            "na funcionalidade de sumarização com IA."
-        )
-
-        st.markdown(
-            "[Consultar Mobilize Brasil]"
-            "(https://www.mobilize.org.br/)"
-        )
-
-st.caption(
-    "As fontes possuem metodologias diferentes e devem "
-    "ser interpretadas de forma complementar."
-)
-
-
-# =========================================================
-# 6. PRINCIPAIS INDICADORES
-# =========================================================
-
-st.divider()
-
-st.header("Indicadores analisados")
+# 2. Entrada para as principais análises
+st.subheader("Explore os dados")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-
     with st.container(border=True):
-
-        st.subheader("Infraestrutura")
-
-        st.markdown(
-            "- Calçada ou passeio\n"
-            "- Rampas de acessibilidade\n"
-            "- Via para bicicleta"
-        )
+        st.markdown("**Panorama IBGE**")
+        st.write("Consulte rankings e o perfil de cada UF.")
+        st.page_link("pages/panorama.py", label="Ver indicadores")
 
 with col2:
-
     with st.container(border=True):
-
-        st.subheader("Circulação")
-
-        st.markdown(
-            "- Calçadas sem obstáculos\n"
-            "- Ponto de ônibus ou van\n"
-            "- Iluminação pública"
-        )
+        st.markdown("**Comparações territoriais**")
+        st.write("Identifique diferenças entre estados e regiões.")
+        st.page_link("pages/comparacoes.py", label="Comparar territórios")
 
 with col3:
-
     with st.container(border=True):
+        st.markdown("**Condições das calçadas**")
+        st.write("Explore avaliações e textos do Mobilize Brasil.")
+        st.page_link("pages/mobilize.py", label="Consultar levantamento")
 
-        st.subheader("Ambiente urbano")
-
-        st.markdown(
-            "- Arborização\n"
-            "- Características do entorno\n"
-            "- Diferenças regionais"
-        )
-
-st.info(
-    "Os percentuais do IBGE representam características "
-    "observadas no entorno dos domicílios considerados "
-    "na pesquisa, e não percentuais de todas as ruas "
-    "de cada estado."
-)
-
-
-# =========================================================
-# 7. RECURSOS DE INTELIGÊNCIA ARTIFICIAL
-# =========================================================
-
+# 3. Prévia analítica: visão nacional ou estadual
 st.divider()
+st.header("Visão geral dos indicadores")
 
-st.header("Inteligência Artificial aplicada")
+opcao_nacional = "Brasil — média das UFs"
+opcoes = [opcao_nacional] + sorted(df["Estado"].unique().tolist())
+recorte = st.selectbox("Recorte territorial", opcoes, key="inicio_recorte")
 
-st.write(
-    "O projeto utiliza o modelo de linguagem "
-    "Qwen2.5-0.5B-Instruct, executado localmente "
-    "e integrado à aplicação por meio da FastAPI."
-)
+campos = list(indicadores_principais.values())
+medias_ufs = df[campos].mean()
 
-col1, col2 = st.columns(2)
+if recorte == opcao_nacional:
+    st.caption("Médias simples dos percentuais das UFs; não são percentuais nacionais ponderados.")
+    for coluna, (nome, campo) in zip(st.columns(4), indicadores_principais.items()):
+        coluna.metric(nome, percentual(medias_ufs[campo]))
 
-with col1:
-
-    with st.container(border=True):
-
-        st.subheader("Análise de indicadores")
-
+    indicador = st.selectbox(
+        "Indicador para comparar as regiões",
+        list(indicadores_principais),
+        index=list(indicadores_principais).index("Rampas"),
+        key="inicio_indicador",
+    )
+    campo = indicadores_principais[indicador]
+    medias_regioes = (
+        df.groupby("Regiao", as_index=False)[campo]
+        .mean()
+        .rename(columns={"Regiao": "Região", campo: "Média das UFs (%)"})
+        .sort_values("Média das UFs (%)", ascending=False)
+    )
+    grafico, destaques = st.columns([3, 2])
+    with grafico:
+        st.subheader(f"{indicador} por região")
+        st.bar_chart(
+            medias_regioes,
+            x="Região",
+            y="Média das UFs (%)",
+            horizontal=True,
+            sort="-Média das UFs (%)",
+            height=260,
+        )
+    with destaques:
+        st.subheader("Destaques")
+        maior = df[campo].max()
+        menor = df[campo].min()
+        ufs_maior = ", ".join(df.loc[df[campo] == maior, "Estado"])
+        ufs_menor = ", ".join(df.loc[df[campo] == menor, "Estado"])
+        st.write(f"**Maior percentual:** {ufs_maior} ({percentual(maior)}).")
+        st.write(f"**Menor percentual:** {ufs_menor} ({percentual(menor)}).")
         st.write(
-            "O modelo recebe indicadores selecionados "
-            "do IBGE e produz um resumo textual "
-            "sobre a Unidade da Federação escolhida."
+            "**Diferença entre extremos:** "
+            f"{pontos_percentuais(maior - menor).lstrip('+')}."
+        )
+        st.caption("Comparação descritiva entre as UFs da base.")
+
+else:
+    linha = df.loc[df["Estado"] == recorte].iloc[0]
+    regiao = linha["Regiao"]
+    medias_regiao = df.loc[df["Regiao"] == regiao, campos].mean()
+    st.caption(f"{recorte} | Região {regiao} | Diferenças em relação à média simples regional")
+
+    for coluna, (nome, campo) in zip(st.columns(4), indicadores_principais.items()):
+        coluna.metric(
+            nome,
+            percentual(linha[campo]),
+            delta=pontos_percentuais(linha[campo] - medias_regiao[campo]),
+            delta_color="off",
         )
 
-        st.caption(
-            "Disponível na página API e LLM."
+    comparacao = pd.DataFrame([
+        {
+            "Indicador": nome,
+            recorte: float(linha[campo]),
+            "Média regional": medias_regiao[campo],
+            "Média das UFs": medias_ufs[campo],
+        }
+        for nome, campo in indicadores_principais.items()
+    ])
+    grafico, destaques = st.columns([3, 2])
+    with grafico:
+        st.subheader("Comparação com as médias")
+        st.bar_chart(
+            comparacao,
+            x="Indicador",
+            y=[recorte, "Média regional", "Média das UFs"],
+            horizontal=True,
+            stack=False,
+            height=300,
         )
+    with destaques:
+        st.subheader("Destaques")
+        diferencas = {
+            nome: float(linha[campo] - medias_regiao[campo])
+            for nome, campo in indicadores_principais.items()
+        }
+        abaixo = min(diferencas, key=diferencas.get)
+        acima = max(diferencas, key=diferencas.get)
+        if diferencas[abaixo] < -0.05:
+            st.write(
+                f"**Maior diferença abaixo da média regional:** {abaixo} "
+                f"({pontos_percentuais(diferencas[abaixo])})."
+            )
+        else:
+            st.write("Nenhum dos quatro indicadores está abaixo da média regional na precisão exibida.")
+        if diferencas[acima] > 0.05:
+            st.write(
+                f"**Maior diferença acima da média regional:** {acima} "
+                f"({pontos_percentuais(diferencas[acima])})."
+            )
+        else:
+            st.write("Nenhum dos quatro indicadores está acima da média regional na precisão exibida.")
+        posicao = int(df["Rampas_pct"].rank(ascending=False, method="min").loc[linha.name])
+        st.write(f"**Rampas:** {posicao}ª posição entre {df['Estado'].nunique()} UFs (com empates).")
 
-with col2:
-
-    with st.container(border=True):
-
-        st.subheader("Sumarização de textos")
-
-        st.write(
-            "O modelo recebe textos coletados do "
-            "Mobilize Brasil e tenta produzir uma "
-            "síntese relacionada à categoria selecionada."
-        )
-
-        st.caption(
-            "Disponível na página Referências Web."
-        )
+    with st.expander("Ver valores da comparação"):
+        st.dataframe(comparacao.round(1), hide_index=True, use_container_width=True)
 
 st.caption(
-    "As respostas da IA podem apresentar imprecisões. "
-    "Os indicadores e os textos originais devem ser "
-    "consultados para conferência."
+    "Os percentuais descrevem o entorno dos domicílios considerados pelo IBGE. "
+    "Rampas e calçadas sem obstáculos têm como referência os entornos com calçada. "
+    "As médias são simples entre UFs. As comparações não indicam conformidade normativa."
 )
 
-
-# =========================================================
-# 8. METODOLOGIA TDSP
-# =========================================================
-
+# 4. Recursos complementares e fontes
 st.divider()
-
-st.header("Metodologia de Ciência de Dados")
-
-st.write(
-    "O desenvolvimento foi organizado com base no "
-    "Team Data Science Process (TDSP)."
-)
-
-etapas = [
-    (
-        "01",
-        "Entendimento do negócio",
-        "Definição do problema, dos objetivos "
-        "e do contexto da acessibilidade urbana.",
-    ),
-    (
-        "02",
-        "Aquisição e entendimento dos dados",
-        "Coleta, organização e análise dos dados "
-        "do IBGE e do Mobilize Brasil.",
-    ),
-    (
-        "03",
-        "Modelagem",
-        "Análise exploratória, integração do modelo "
-        "de linguagem e Engenharia de Prompt.",
-    ),
-    (
-        "04",
-        "Implantação",
-        "Integração do dashboard Streamlit, "
-        "FastAPI e modelo local.",
-    ),
-    (
-        "05",
-        "Aceitação da solução",
-        "Testes de funcionamento, análise dos resultados "
-        "e identificação das limitações.",
-    ),
-]
-
-for numero, titulo, descricao in etapas:
-
-    with st.container(border=True):
-
-        col_numero, col_descricao = st.columns([1, 9])
-
-        with col_numero:
-
-            st.subheader(numero)
-
-        with col_descricao:
-
-            st.markdown(f"**{titulo}**")
-
-            st.write(descricao)
-
-
-# =========================================================
-# 9. ESG E ODS
-# =========================================================
-
-st.divider()
-
-st.header("Sustentabilidade e inclusão urbana")
-
+st.subheader("Recursos complementares")
 col1, col2 = st.columns(2)
-
 with col1:
+    st.page_link("pages/dados.py", label="Importar e exportar dados")
+    st.caption("Consulte a base e adicione dados complementares em CSV.")
+with col2:
+    st.page_link("pages/api_llm.py", label="Análise com IA local")
+    st.caption("Gere resumos dos indicadores e confira os dados utilizados.")
 
-    st.subheader("ODS 11")
-
-    st.write(
-        "**Cidades e Comunidades Sustentáveis**"
-    )
-
-    st.write(
-        "O projeto está relacionado à análise das condições "
-        "urbanas e da mobilidade de pedestres, contribuindo "
-        "para a discussão sobre cidades mais inclusivas "
-        "e acessíveis."
-    )
-
+with st.expander("Sobre os dados e o projeto"):
     st.markdown(
-        "[Conhecer o ODS 11]"
-        "(https://brasil.un.org/pt-br/sdgs/11)"
+        "**Fontes:** [IBGE — SIDRA, tabela 9584](https://sidra.ibge.gov.br/tabela/9584) "
+        "e [Mobilize Brasil](https://www.mobilize.org.br/). "
+        "Os levantamentos têm metodologias e abrangências diferentes."
     )
-
-with col2:
-
-    st.subheader("ESG — Dimensão Social")
-
     st.write(
-        "A acessibilidade urbana possui relação com "
-        "inclusão social, mobilidade, segurança e "
-        "qualidade de vida."
+        "O painel apoia a consulta de informações sobre mobilidade e inclusão urbana, "
+        "no contexto do ODS 11 e da dimensão Social do ESG. "
+        "Não substitui diagnósticos técnicos locais."
     )
-
-    st.write(
-        "A análise dos indicadores pode apoiar estudos "
-        "e discussões sobre planejamento urbano e "
-        "melhoria dos espaços públicos."
-    )
-
-
-# =========================================================
-# 10. NAVEGAÇÃO
-# =========================================================
-
-st.divider()
-
-st.header("Explore a aplicação")
-
-st.write(
-    "Utilize o menu lateral para acessar as funcionalidades."
-)
-
-paginas = [
-    (
-        "Panorama IBGE",
-        "Consulte indicadores e rankings estaduais.",
-    ),
-    (
-        "Comparações",
-        "Compare estados, regiões e indicadores.",
-    ),
-    (
-        "Referências Web",
-        "Explore os dados do Mobilize e utilize "
-        "a sumarização de textos com IA local.",
-    ),
-    (
-        "Upload e Download",
-        "Adicione ou exporte dados complementares.",
-    ),
-    (
-        "API e LLM",
-        "Consulte a API e gere resumos dos indicadores "
-        "com Inteligência Artificial.",
-    ),
-]
-
-for titulo, descricao in paginas:
-
-    with st.container(border=True):
-
-        st.markdown(f"**{titulo}**")
-
-        st.write(descricao)
-
-
-# =========================================================
-# 11. IDENTIFICAÇÃO
-# =========================================================
-
-st.divider()
-
-st.caption(
-    "Diego Favretto | Ciência de Dados | "
-    "Projeto de Bloco — Inteligência Artificial Aplicada"
-)

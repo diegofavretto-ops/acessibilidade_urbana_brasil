@@ -1,302 +1,54 @@
 import pandas as pd
 import streamlit as st
 
-from comum import (
-    carregar_dados_ibge,
-    inicializar_estado,
-)
+from comum import carregar_dados_ibge, inicializar_estado
 
-
-# =========================================================
-# 1. DADOS
-# =========================================================
 
 inicializar_estado()
-
 df = carregar_dados_ibge()
+st.title("Dados e exportação")
+st.caption("Consulte, complemente e exporte a base estadual de indicadores.")
 
-
-# =========================================================
-# 2. CABEÇALHO
-# =========================================================
-
-st.title("Upload e Download")
-
-st.write(
-    "Utilize esta página para adicionar informações "
-    "complementares à base do IBGE por meio de um arquivo "
-    "CSV e depois baixar a base resultante."
-)
-
-st.info(
-    "O arquivo complementar precisa possuir uma coluna "
-    "chamada Estado. As demais colunas serão adicionadas "
-    "à base principal utilizando essa coluna como referência."
-)
-
-st.divider()
-
-
-# =========================================================
-# 3. UPLOAD
-# =========================================================
-
-st.header(
-    "1. Upload de dados complementares"
-)
-
-
-with st.container(
-    border=True
-):
-
-    arquivo_enviado = st.file_uploader(
-        "Selecione um arquivo CSV:",
-        type=[
-            "csv"
-        ],
-    )
-
-
-    if arquivo_enviado is not None:
-
+with st.expander("Adicionar dados complementares (CSV)"):
+    st.caption("A coluna Estado deve conter os nomes das UFs, uma linha por UF. Utilize nomes de colunas diferentes dos indicadores originais.")
+    if "chave_upload_dados" not in st.session_state:
+        st.session_state["chave_upload_dados"] = 0
+    if st.button("Remover dados complementares"):
+        st.session_state["dados_upload"] = None
+        st.session_state["chave_upload_dados"] += 1
+    arquivo = st.file_uploader("Arquivo CSV", type=["csv"], key=f"upload_complementar_{st.session_state['chave_upload_dados']}")
+    if arquivo is not None:
         try:
-
-            dados_upload = pd.read_csv(
-                arquivo_enviado
-            )
-
-
-            if "Estado" in (
-                dados_upload.columns
-            ):
-
-                st.session_state[
-                    "dados_upload"
-                ] = dados_upload
-
-
-                st.success(
-                    "Arquivo carregado com sucesso."
-                )
-
-
-            else:
-
-                st.error(
-                    "O arquivo precisa possuir uma "
-                    "coluna chamada Estado."
-                )
-
-
+            dados = pd.read_csv(arquivo)
+            if "Estado" not in dados.columns:
+                raise ValueError("A coluna Estado é obrigatória.")
+            dados["Estado"] = dados["Estado"].astype("string").str.strip()
+            if dados["Estado"].isna().any() or dados["Estado"].duplicated().any():
+                raise ValueError("Informe uma única linha por UF, sem valores vazios.")
+            desconhecidos = sorted(set(dados["Estado"]) - set(df["Estado"]))
+            if desconhecidos:
+                raise ValueError("UFs não reconhecidas: " + ", ".join(desconhecidos))
+            comuns = (set(dados.columns) & set(df.columns)) - {"Estado"}
+            if comuns:
+                raise ValueError("Renomeie as colunas complementares já existentes: " + ", ".join(sorted(comuns)))
+            st.session_state["dados_upload"] = dados
+            st.success("Dados complementares disponíveis.")
         except Exception as erro:
-
-            st.error(
-                (
-                    "Não foi possível ler o CSV: "
-                    f"{erro}"
-                )
-            )
-
-
-# =========================================================
-# 4. RESUMO DO ARQUIVO ENVIADO
-# =========================================================
-
-dados_upload_estado = (
-    st.session_state[
-        "dados_upload"
-    ]
-)
-
-
-if dados_upload_estado is not None:
-
-    st.subheader(
-        "Resumo do arquivo enviado"
-    )
-
-
-    col1, col2, col3 = st.columns(
-        3
-    )
-
-
-    with col1:
-
-        st.metric(
-            "Linhas",
-            len(
-                dados_upload_estado
-            ),
-        )
-
-
-    with col2:
-
-        st.metric(
-            "Colunas",
-            len(
-                dados_upload_estado.columns
-            ),
-        )
-
-
-    with col3:
-
-        st.metric(
-            "Estados informados",
-            dados_upload_estado[
-                "Estado"
-            ].nunique(),
-        )
-
-
-    with st.expander(
-        "Ver dados enviados"
-    ):
-
-        st.dataframe(
-            dados_upload_estado,
-            use_container_width=True,
-            hide_index=True,
-        )
-
-
-# =========================================================
-# 5. BASE RESULTANTE
-# =========================================================
-
-st.divider()
-
-st.header(
-    "2. Base resultante"
-)
-
-
-df_complementado = df.copy()
-
-
-if dados_upload_estado is not None:
-
-    df_complementado = df.merge(
-        dados_upload_estado,
-        on="Estado",
-        how="left",
-    )
-
-
-    st.success(
-        "A base principal foi combinada com "
-        "os dados complementares enviados."
-    )
-
-
-else:
-
-    st.caption(
-        "Nenhum arquivo complementar foi enviado. "
-        "A base resultante corresponde à base original do IBGE."
-    )
-
-
-# =========================================================
-# 6. RESUMO DA BASE
-# =========================================================
-
-col1, col2, col3 = st.columns(
-    3
-)
-
-
-with col1:
-
-    st.metric(
-        "Linhas da base",
-        len(
-            df_complementado
-        ),
-    )
-
-
-with col2:
-
-    st.metric(
-        "Colunas da base",
-        len(
-            df_complementado.columns
-        ),
-    )
-
-
-with col3:
-
-    st.metric(
-        "Unidades da Federação",
-        df_complementado[
-            "Estado"
-        ].nunique(),
-    )
-
-
-st.subheader(
-    "Prévia da base"
-)
-
-
-st.dataframe(
-    df_complementado.head(
-        10
-    ),
-    use_container_width=True,
-    hide_index=True,
-)
-
-
-with st.expander(
-    "Ver base completa"
-):
-
-    st.dataframe(
-        df_complementado,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# =========================================================
-# 7. DOWNLOAD
-# =========================================================
-
-st.divider()
-
-st.header(
-    "3. Download"
-)
-
-
-st.write(
-    "Baixe a base exibida acima em formato CSV."
-)
-
-
-csv_download = (
-    df_complementado
-    .to_csv(
-        index=False
-    )
-    .encode(
-        "utf-8-sig"
-    )
-)
-
-
-st.download_button(
-    label="Baixar dados em CSV",
-    data=csv_download,
-    file_name=(
-        "dados_acessibilidade.csv"
-    ),
-    mime="text/csv",
-    use_container_width=True,
-)
+            st.error(f"Não foi possível utilizar o arquivo: {erro}")
+            st.session_state["dados_upload"] = None
+
+upload = st.session_state["dados_upload"]
+base = df.copy() if upload is None else df.merge(upload, on="Estado", how="left", validate="one_to_one")
+col1, col2, col3 = st.columns(3)
+col1.metric("Unidades da Federação", base["Estado"].nunique())
+col2.metric("Colunas da base", len(base.columns))
+col3.metric("UFs complementadas", 0 if upload is None else upload["Estado"].nunique())
+if upload is not None:
+    with st.expander("Ver arquivo complementar"):
+        st.dataframe(upload, hide_index=True, use_container_width=True)
+regiao = st.selectbox("Região", ["Todas"] + sorted(base["Regiao"].unique()))
+exibicao = base if regiao == "Todas" else base[base["Regiao"] == regiao]
+st.subheader("Base de indicadores")
+st.dataframe(exibicao, hide_index=True, use_container_width=True)
+st.download_button("Exportar recorte em CSV", exibicao.to_csv(index=False).encode("utf-8-sig"), "dados_acessibilidade.csv", "text/csv", use_container_width=True)
+st.caption("Fonte principal: IBGE, Censo Demográfico 2022. Dados complementares são fornecidos pelo usuário.")
